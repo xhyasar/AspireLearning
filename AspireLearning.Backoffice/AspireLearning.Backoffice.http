@@ -1,0 +1,6 @@
+@AspireLearning.Backoffice_HostAddress = http://localhost:5003
+
+GET {{AspireLearning.Backoffice_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
