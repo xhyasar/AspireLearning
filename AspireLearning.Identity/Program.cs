@@ -73,5 +73,6 @@ app.UseAuthorization();
 
 app.MapDefaultEndpoints();
 app.MapAuthEndpoints();
+app.MapUserEndpoints();
 
 await app.RunAsync();

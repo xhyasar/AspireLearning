@@ -31,4 +31,6 @@ public class UserViewModel
     public string LastName { get; set; } = null!;
 
     public string FullName { get; set; } = null!;
+
+    public string[] Roles { get; set; } = [];
 }

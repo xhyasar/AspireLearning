@@ -7,9 +7,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 var jwtSettings = builder.Configuration.GetSection(nameof(JwtSettings)).Get<JwtSettings>();
 
 if(jwtSettings is null)
-{
     throw new InvalidConfigurationException("JwtSettings not found in configuration");
-}
 
 var sqlPassword = builder.AddParameter("sqlPassword", "Password12.");
 var sqlServer = builder.AddSqlServer("sqlServer", sqlPassword);
