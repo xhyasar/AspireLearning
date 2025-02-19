@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting.GlobalConstant;
 using Microsoft.Extensions.Hosting.GlobalModel.Identity;
+using Microsoft.Extensions.Hosting.GlobalModel.Session;
 
 namespace AspireLearning.Identity.Endpoints;
 
@@ -33,17 +34,15 @@ public static class UserEndpoints
                 ]
             });
             
-            var user = await service.FindByEmailAsync(model.Email);
-            
-            return identityResult.Succeeded ? Results.CreatedAtRoute("login") : Results.BadRequest(identityResult.Errors);
+            return identityResult.Succeeded ? Results.Ok() : Results.BadRequest(identityResult.Errors);
         })
         .WithDescription("Register to the system")
         .Produces(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status400BadRequest);
         
-        app.MapGet("user", async ([FromServices] UserService service, [FromServices]HttpContext context) =>
+        app.MapGet("user", async ([FromServices] UserService service, [FromServices]SessionModel session) =>
         {
-            var user = await service.GetUserAsync(context.User);
+            var user = await service.FindByEmailAsync(session.User.Email);
             
             if (user == null)
                 return Results.NotFound();
@@ -62,7 +61,6 @@ public static class UserEndpoints
             
             return Results.Ok(userViewModel);
         })
-        .RequireAuthorization()
         .WithDescription("Get user by id")
         .Produces<UserViewModel>(StatusCodes.Status200OK, "application/json")
         .Produces(StatusCodes.Status404NotFound);

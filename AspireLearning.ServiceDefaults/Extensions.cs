@@ -1,9 +1,15 @@
+using System.Text;
+using AspireLearning.ServiceDefaults.GlobalMiddleware;
+using AspireLearning.ServiceDefaults.GlobalUtility;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Hosting.GlobalModel.Session;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.ServiceDiscovery;
+using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -16,6 +22,44 @@ namespace Microsoft.Extensions.Hosting;
 public static class Extensions {
     public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
+        builder.Services.AddOpenApi(opt => {
+            opt.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+        });
+
+        builder.AddRedisDistributedCache("redis");
+
+        builder.Services.AddScoped<SessionHandlerMiddleware>();
+        
+        builder.Services.AddHttpContextAccessor();
+        
+        builder.Services.AddScoped<SessionModel>(provider =>
+        {
+            var httpContextAccessor = provider.GetRequiredService<IHttpContextAccessor>();
+            var context = httpContextAccessor.HttpContext;
+            return context?.Items[nameof(SessionModel)] as SessionModel ?? new SessionModel();
+        });
+        
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                var secretKey = builder.Configuration["JwtSettings:SecretKey"];
+                var key = Encoding.ASCII.GetBytes(secretKey!);
+                var issuer = builder.Configuration["JwtSettings:Issuer"];
+                var audience = builder.Configuration["JwtSettings:Audience"];
+        
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidIssuer = issuer,
+                    ValidAudience = audience,
+                    ClockSkew = TimeSpan.Zero
+                };
+            });
+        
         builder.ConfigureOpenTelemetry();
 
         builder.AddDefaultHealthChecks();

@@ -6,9 +6,12 @@ public class RefitHeaderHandler(IHttpContextAccessor httpContextAccessor) : Dele
 {
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var token = httpContextAccessor.HttpContext?.Request.Headers.Authorization;
-        if (!string.IsNullOrEmpty(token))
-            request.Headers.Authorization = new AuthenticationHeaderValue(token!);
+        var token = httpContextAccessor.HttpContext?.Request.Headers.Authorization.ToString();
+        if (string.IsNullOrEmpty(token))
+            return await base.SendAsync(request, cancellationToken);
+        
+        var baseToken = token.Replace("Bearer ", "");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", baseToken);
 
         return await base.SendAsync(request, cancellationToken);
     }

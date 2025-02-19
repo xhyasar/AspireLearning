@@ -10,10 +10,10 @@ public static class UserEndpoints
         app.MapPost("user/create", async ([FromServices]IIdentityClient client, UserCreateModel model) =>
         {
             await client.Register(model);
-            return Results.Ok();
+            return Results.Created();
         })
         .WithDescription("Register")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status201Created)
         .Produces(StatusCodes.Status400BadRequest);
 
         app.MapGet("user", async ([FromServices]IIdentityClient client) =>
@@ -21,6 +21,7 @@ public static class UserEndpoints
             var result = await client.GetUser();
             return Results.Ok(result);
         })
+        .RequireAuthorization()
         .WithDescription("Get user")
         .Produces<UserViewModel>(StatusCodes.Status200OK, "application/json")
         .Produces(StatusCodes.Status400BadRequest);

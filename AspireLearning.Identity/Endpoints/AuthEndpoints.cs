@@ -7,6 +7,7 @@ using AspireLearning.Identity.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Hosting.GlobalModel.Identity;
+using Microsoft.Extensions.Hosting.GlobalModel.Session;
 using Microsoft.IdentityModel.Tokens;
 using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
@@ -44,7 +45,14 @@ public static class AuthEndpoints
                     Roles = roles.ToArray()
                 }
             };
-            var json = JsonSerializer.Serialize(userTokenModel);
+            
+            var session = new SessionModel
+            {
+                Token = token,
+                User = userTokenModel.User
+            };
+            
+            var json = JsonSerializer.Serialize(session);
             
             await cache.SetStringAsync(token, json);
             
