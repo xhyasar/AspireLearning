@@ -1,6 +1,0 @@
-@AspireLearning.BFF_HostAddress = http://localhost:5168
-
-GET {{AspireLearning.BFF_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

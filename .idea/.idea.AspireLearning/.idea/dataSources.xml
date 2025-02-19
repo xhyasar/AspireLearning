@@ -22,26 +22,5 @@
       <jdbc-url>Server=127.0.0.1,58204;User ID=sa;Password=Password12.;TrustServerCertificate=true;Database=backofficeDb</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="backofficeDb" uuid="8bf88cc9-a62e-4b12-830c-9b6e7da373ef">
-      <driver-ref>sqlserver.jb</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>com.jetbrains.jdbc.sqlserver.SqlServerDriver</jdbc-driver>
-      <jdbc-url>Server=127.0.0.1,50142;User ID=sa;Password=Password12.;TrustServerCertificate=true;Database=backofficeDb</jdbc-url>
-      <working-dir>$ProjectFileDir$</working-dir>
-    </data-source>
-    <data-source source="LOCAL" name="redis" uuid="28c86c7b-ea4f-4c68-81ab-d762d43d8422">
-      <driver-ref>redis</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>jdbc.RedisDriver</jdbc-driver>
-      <jdbc-url>jdbc:redis://localhost:50141</jdbc-url>
-      <working-dir>$ProjectFileDir$</working-dir>
-    </data-source>
-    <data-source source="LOCAL" name="identityDb" uuid="5f586788-9829-49d0-a580-14f0b4accbe8">
-      <driver-ref>sqlserver.jb</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>com.jetbrains.jdbc.sqlserver.SqlServerDriver</jdbc-driver>
-      <jdbc-url>Server=127.0.0.1,50142;User ID=sa;Password=Password12.;TrustServerCertificate=true;Database=identityDb</jdbc-url>
-      <working-dir>$ProjectFileDir$</working-dir>
-    </data-source>
   </component>
 </project>

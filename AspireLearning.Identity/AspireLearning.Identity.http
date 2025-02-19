@@ -1,6 +1,0 @@
-@AspireLearning.Identity_HostAddress = http://localhost:5094
-
-GET {{AspireLearning.Identity_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
