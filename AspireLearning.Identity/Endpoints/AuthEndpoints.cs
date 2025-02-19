@@ -16,9 +16,9 @@ public static class AuthEndpoints
 {
     public static void MapAuthEndpoints(this WebApplication app)
     {
-        app.MapPost("identity/auth/login", async ([FromBody]LoginModel model, UserService service, IDistributedCache cache) =>
+        app.MapPost("auth/login", async ([FromBody]LoginModel model, UserService service, IDistributedCache cache) =>
         {
-            var user = await service.FindByEmailAsync(model.Email) ;
+            var user = await service.FindByEmailAsync(model.Email);
             
             if (user == null)
                 return Results.BadRequest("User not found");
@@ -40,9 +40,9 @@ public static class AuthEndpoints
                     Id = user.Id,
                     Email = user.Email!,
                     FirstName = user.FirstName,
-                    LastName = user.LastName
-                },
-                Roles = roles.ToArray()
+                    LastName = user.LastName,
+                    Roles = roles.ToArray()
+                }
             };
             var json = JsonSerializer.Serialize(userTokenModel);
             

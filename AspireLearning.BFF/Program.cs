@@ -1,4 +1,5 @@
 using System.Text;
+using AspireLearning.BFF.Handlers;
 using AspireLearning.BFF.Microservices.Identity;
 using AspireLearning.BFF.Microservices.Identity.Endpoints;
 using AspireLearning.ServiceDefaults.GlobalUtility;
@@ -46,8 +47,12 @@ builder.Services.AddCors(x => x.AddPolicy("AllowAll", corsPolicyBuilder => {
         .AllowAnyHeader();
 }));
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<RefitHeaderHandler>();
+
 builder.Services.AddRefitClient<IIdentityClient>()
-    .ConfigureHttpClient(c => c.BaseAddress = new Uri(Environment.GetEnvironmentVariable("services__identity__https__0")!));
+    .ConfigureHttpClient(c => c.BaseAddress = new Uri(Environment.GetEnvironmentVariable("services__identity__https__0")!))
+    .AddHttpMessageHandler<RefitHeaderHandler>();
 
 var app = builder.Build();
 

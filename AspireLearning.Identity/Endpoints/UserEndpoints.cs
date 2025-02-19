@@ -11,7 +11,7 @@ public static class UserEndpoints
 {
     public static void MapUserEndpoints(this WebApplication app)
     {
-        app.MapPost("/user/create", async ([FromBody] UserCreateModel model, [FromServices] UserService service) =>
+        app.MapPost("user/create", async ([FromBody] UserCreateModel model, [FromServices] UserService service) =>
         {
             var passwordHasher = new PasswordHasher<User>();
             var passwordHash = passwordHasher.HashPassword(null, model.Password);
@@ -33,15 +33,17 @@ public static class UserEndpoints
                 ]
             });
             
-            return identityResult.Succeeded ? Results.Ok() : Results.BadRequest(identityResult.Errors);
+            var user = await service.FindByEmailAsync(model.Email);
+            
+            return identityResult.Succeeded ? Results.CreatedAtRoute("login") : Results.BadRequest(identityResult.Errors);
         })
         .WithDescription("Register to the system")
         .Produces(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status400BadRequest);
         
-        app.MapGet("/user/{id:guid}", async ([FromRoute] Guid id, [FromServices] UserService service) =>
+        app.MapGet("user", async ([FromServices] UserService service, [FromServices]HttpContext context) =>
         {
-            var user = await service.FindByIdAsync(id.ToString());
+            var user = await service.GetUserAsync(context.User);
             
             if (user == null)
                 return Results.NotFound();
@@ -60,6 +62,7 @@ public static class UserEndpoints
             
             return Results.Ok(userViewModel);
         })
+        .RequireAuthorization()
         .WithDescription("Get user by id")
         .Produces<UserViewModel>(StatusCodes.Status200OK, "application/json")
         .Produces(StatusCodes.Status404NotFound);

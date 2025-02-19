@@ -74,23 +74,12 @@
         ]
       }
     },
-    "/user/{id}": {
+    "/user": {
       "get": {
         "tags": [
           "AspireLearning.BFF"
         ],
         "description": "Get user",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -152,12 +141,6 @@
           },
           "user": {
             "$ref": "#/components/schemas/UserViewModel"
-          },
-          "roles": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           }
         }
       },

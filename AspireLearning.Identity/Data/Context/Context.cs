@@ -21,5 +21,7 @@ public class Context(DbContextOptions<Context> options) : IdentityDbContext<User
             .WithMany(u => u.UserRoles)
             .HasForeignKey(ur => ur.RoleId)
             .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.SeedRoles();
     }
 }

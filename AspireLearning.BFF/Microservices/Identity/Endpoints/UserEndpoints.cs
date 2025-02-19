@@ -7,7 +7,7 @@ public static class UserEndpoints
 {
     public static void MapUserEndpoints(this WebApplication app)
     {
-        app.MapPost("/user/create", async ([FromServices]IUserClient client, UserCreateModel model) =>
+        app.MapPost("user/create", async ([FromServices]IIdentityClient client, UserCreateModel model) =>
         {
             await client.Register(model);
             return Results.Ok();
@@ -16,9 +16,9 @@ public static class UserEndpoints
         .Produces(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status400BadRequest);
 
-        app.MapGet("/user/{id:guid}", async ([FromServices]IUserClient client, Guid id) =>
+        app.MapGet("user", async ([FromServices]IIdentityClient client) =>
         {
-            var result = await client.GetUser(id);
+            var result = await client.GetUser();
             return Results.Ok(result);
         })
         .WithDescription("Get user")

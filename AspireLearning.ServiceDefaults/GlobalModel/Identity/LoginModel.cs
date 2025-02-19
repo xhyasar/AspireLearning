@@ -12,6 +12,4 @@ public class UserTokenModel
     public string Token { get; set; } = null!;
     
     public UserViewModel User { get; set; } = null!;
-    
-    public string[] Roles { get; set; } = [];
 }

@@ -7,15 +7,15 @@ public interface IIdentityClient: IUserClient, IAuthClient;
 
 public interface IUserClient
 {
-    [Post("user/create")]
+    [Post("/user/create")]
     Task Register([Body]UserCreateModel model);
     
-    [Get("user/{id}")]
-    Task<UserViewModel> GetUser(Guid id);
+    [Get("/user")]
+    Task<UserViewModel> GetUser();
 }
 
 public interface IAuthClient
 {
-    [Post("auth/login")]
+    [Post("/auth/login")]
     Task<UserTokenModel> Login([Body]LoginModel model);
 }

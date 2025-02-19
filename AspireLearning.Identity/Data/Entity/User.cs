@@ -21,5 +21,5 @@ public class User : IdentityUser<Guid>
     
     public bool IsDeleted { get; set; }
     
-    public UserRole[] UserRoles { get; set; } = [];
+    public ICollection<UserRole> UserRoles { get; set; } = [];
 }

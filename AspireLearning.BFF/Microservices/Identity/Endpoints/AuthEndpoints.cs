@@ -7,7 +7,7 @@ public static class AuthEndpoints
 {
     public static void MapAuthEndpoints(this WebApplication app)
     {
-        app.MapPost("/auth/login", async ([FromServices]IAuthClient client, LoginModel model) =>
+        app.MapPost("auth/login", async ([FromServices]IIdentityClient client, LoginModel model) =>
         {
             var result = await client.Login(model);
             return Results.Ok(result);
