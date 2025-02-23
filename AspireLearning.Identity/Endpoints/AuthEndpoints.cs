@@ -4,10 +4,10 @@ using System.Text;
 using System.Text.Json;
 using AspireLearning.Identity.Data.Entity;
 using AspireLearning.Identity.Services;
+using AspireLearning.ServiceDefaults.GlobalModel.Session;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Hosting.GlobalModel.Identity;
-using Microsoft.Extensions.Hosting.GlobalModel.Session;
 using Microsoft.IdentityModel.Tokens;
 using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 

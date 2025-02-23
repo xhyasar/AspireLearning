@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using AspireLearning.ServiceDefaults.GlobalEnum;
 using Microsoft.Extensions.Hosting.GlobalModel.Identity;
 
-namespace Microsoft.Extensions.Hosting.GlobalModel.Session;
+namespace AspireLearning.ServiceDefaults.GlobalModel.Session;
 
 public class SessionModel
 {
@@ -17,4 +18,7 @@ public class SessionModel
     
     [NotMapped]
     public bool IsExpired => DateTime.UtcNow > ExpiresAt;
+
+    [NotMapped]
+    public LanguageEnum Language { get; set; }
 }

@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.Services.AddProblemDetails();
 
-builder.AddSqlServerDbContext<Context>("IdentityDb");
+builder.AddSqlServerDbContext<Context>("identityDb");
 
 builder.Services.AddIdentity<User,Role>()
     .AddEntityFrameworkStores<Context>()

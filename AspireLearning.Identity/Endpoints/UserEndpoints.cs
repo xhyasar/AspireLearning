@@ -1,10 +1,10 @@
 using AspireLearning.Identity.Data.Entity;
 using AspireLearning.Identity.Services;
+using AspireLearning.ServiceDefaults.GlobalModel.Session;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting.GlobalConstant;
 using Microsoft.Extensions.Hosting.GlobalModel.Identity;
-using Microsoft.Extensions.Hosting.GlobalModel.Session;
 
 namespace AspireLearning.Identity.Endpoints;
 
