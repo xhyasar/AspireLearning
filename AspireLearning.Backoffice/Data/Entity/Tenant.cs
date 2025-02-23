@@ -62,7 +62,7 @@ public class TenantSeeder : IEntitySeeder
                 ContactName = TenantConstants.ContactName,
                 ContactEmail = TenantConstants.ContactEmail,
                 ContactPhone = TenantConstants.ContactPhone,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = new DateTime(2025, 1, 1),
                 CreatedBy = UserConstants.Id,
                 IsDeleted = false,
                 IsActive = true

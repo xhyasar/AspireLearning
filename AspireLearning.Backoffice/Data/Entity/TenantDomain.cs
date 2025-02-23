@@ -1,3 +1,4 @@
+using AspireLearning.ServiceDefaults.GlobalAttribute;
 using AspireLearning.ServiceDefaults.GlobalConstant;
 using AspireLearning.ServiceDefaults.GlobalInterface;
 using Microsoft.EntityFrameworkCore;
@@ -28,11 +29,12 @@ public class TenantDomainConfigurator : IEntityConfigurator
     }
 }
 
+[SeedAfter(nameof(TenantSeeder))]
 public class TenantDomainSeeder : IEntitySeeder
 {
     public void Seed(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Tenant>().HasData(
+        modelBuilder.Entity<TenantDomain>().HasData(
             new TenantDomain
             {
                 Id = TenantConstants.DomainId,
