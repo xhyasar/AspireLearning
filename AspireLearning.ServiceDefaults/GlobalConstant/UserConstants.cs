@@ -11,4 +11,6 @@ public static class UserConstants
     public const string Email = "ahmetemre@saas.com";
 
     public const string Password = "123Ahmet-_-";
+    
+    public const string PhoneNumber = "+905943245432";
 }

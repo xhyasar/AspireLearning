@@ -20,8 +20,9 @@
 
     <ItemGroup>
       <ProjectReference Include="..\AspireLearning.Backoffice\AspireLearning.Backoffice.csproj" />
-      <ProjectReference Include="..\AspireLearning.BFF\AspireLearning.BFF.csproj" />
+      <ProjectReference Include="..\AspireLearning.ApiGateway\AspireLearning.ApiGateway.csproj" />
       <ProjectReference Include="..\AspireLearning.Identity\AspireLearning.Identity.csproj" />
+      <ProjectReference Include="..\AspireLearning.Warehouse\AspireLearning.Warehouse.csproj" />
     </ItemGroup>
 
 </Project>

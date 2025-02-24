@@ -14,35 +14,32 @@ var sqlServer = builder.AddSqlServer("sqlServer", sqlPassword);
 
 var identityDb = sqlServer.AddDatabase("identityDb");
 var backofficeDb = sqlServer.AddDatabase("backofficeDb");
+var warehouseDb = sqlServer.AddDatabase("warehouseDb");
 
 var redis = builder.AddRedis("redis");
 
-var identityService = builder.AddProject<Projects.AspireLearning_Identity>("identity")
-    .WithReference(identityDb)
-    .WaitFor(identityDb)
-    .WithReference(redis)
-    .WaitFor(redis)
+var identityService = builder.AddProject<Projects.AspireLearning_Identity>("identityservice")
+    .WithReference(identityDb).WaitFor(identityDb)
+    .WithReference(redis).WaitFor(redis)
     .InjectJwtSettings(jwtSettings);
 
-var backofficeService = builder.AddProject<Projects.AspireLearning_Backoffice>("backoffice")
-    .WithReference(backofficeDb)
-    .WaitFor(backofficeDb)
-    .WithReference(redis)
-    .WaitFor(redis)
+var backofficeService = builder.AddProject<Projects.AspireLearning_Backoffice>("backofficeservice")
+    .WithReference(backofficeDb).WaitFor(backofficeDb)
+    .WithReference(redis).WaitFor(redis)
     .InjectJwtSettings(jwtSettings);
 
-var bffService = builder.AddProject<Projects.AspireLearning_BFF>("bff")
-    .WithReference(identityService)
-    .WaitFor(identityService)
-    .WithReference(backofficeService)
-    .WaitFor(backofficeService)
-    .WithReference(redis)
-    .WaitFor(redis)
+var warehouseService = builder.AddProject<Projects.AspireLearning_Warehouse>("warehouseservice")
+    .WithReference(warehouseDb).WaitFor(warehouseDb)
+    .WithReference(redis).WaitFor(redis)
     .InjectJwtSettings(jwtSettings);
+
+var apiGateway = builder.AddProject<Projects.AspireLearning_ApiGateway>("apigateway")
+    .WithReference(identityService).WaitFor(identityService)
+    .WithReference(backofficeService).WaitFor(backofficeService)
+    .WithReference(warehouseService).WaitFor(warehouseService);
 
 builder.AddNpmApp("web","../AspireLearning.Front")
-    .WithReference(bffService)
-    .WaitFor(bffService)
+    .WithReference(apiGateway).WaitFor(apiGateway)
     .WithHttpEndpoint(env: "PORT", port: 60000)
     .WithExternalHttpEndpoints()
     .PublishAsDockerFile();

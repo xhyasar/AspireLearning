@@ -4,11 +4,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireLearning.AppHost", "A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireLearning.ServiceDefaults", "AspireLearning.ServiceDefaults\AspireLearning.ServiceDefaults.csproj", "{1464568F-A70A-41DC-9696-D60992B2E56D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireLearning.BFF", "AspireLearning.BFF\AspireLearning.BFF.csproj", "{EFFFF6A5-AB8E-4F3D-A2AA-1A63E2503B6B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireLearning.ApiGateway", "AspireLearning.ApiGateway\AspireLearning.ApiGateway.csproj", "{EFFFF6A5-AB8E-4F3D-A2AA-1A63E2503B6B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireLearning.Identity", "AspireLearning.Identity\AspireLearning.Identity.csproj", "{863F9BD3-083E-478B-9F3C-FD2B17CB1911}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireLearning.Backoffice", "AspireLearning.Backoffice\AspireLearning.Backoffice.csproj", "{8DA86155-9A48-4D29-A4CE-BA7FE7BD652D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireLearning.Warehouse", "AspireLearning.Warehouse\AspireLearning.Warehouse.csproj", "{573A77CB-88E2-49BA-9A4A-456DB23FD298}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,5 +38,9 @@ Global
 		{8DA86155-9A48-4D29-A4CE-BA7FE7BD652D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8DA86155-9A48-4D29-A4CE-BA7FE7BD652D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8DA86155-9A48-4D29-A4CE-BA7FE7BD652D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{573A77CB-88E2-49BA-9A4A-456DB23FD298}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{573A77CB-88E2-49BA-9A4A-456DB23FD298}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{573A77CB-88E2-49BA-9A4A-456DB23FD298}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{573A77CB-88E2-49BA-9A4A-456DB23FD298}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

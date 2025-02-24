@@ -4,8 +4,11 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <UserSecretsId>5f8d6c4e-6160-43a2-a000-03329aa531a3</UserSecretsId>
     </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0"/>
+    </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\AspireLearning.ServiceDefaults\AspireLearning.ServiceDefaults.csproj" />

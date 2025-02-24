@@ -12,10 +12,10 @@ public static class UserEndpoints
 {
     public static void MapUserEndpoints(this WebApplication app)
     {
-        app.MapPost("user/create", async ([FromBody] UserCreateModel model, [FromServices] UserService service) =>
+        app.MapPost("api/identity/user/create", async ([FromBody] UserCreateModel model, [FromServices] UserService service) =>
         {
             var passwordHasher = new PasswordHasher<User>();
-            var passwordHash = passwordHasher.HashPassword(null, model.Password);
+            var passwordHash = passwordHasher.HashPassword(new User(), model.Password);
             
             var identityResult = await service.CreateAsync(new User
             {
@@ -40,7 +40,7 @@ public static class UserEndpoints
         .Produces(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status400BadRequest);
         
-        app.MapGet("user", async ([FromServices] UserService service, [FromServices]SessionModel session) =>
+        app.MapGet("api/identity/user", async ([FromServices] UserService service, [FromServices]SessionModel session) =>
         {
             var user = await service.FindByEmailAsync(session.User.Email);
             
