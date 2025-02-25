@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
@@ -13,6 +16,9 @@ using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using StackExchange.Redis;
+using ZiggyCreatures.Caching.Fusion;
+using ZiggyCreatures.Caching.Fusion.Serialization.SystemTextJson;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -50,9 +56,23 @@ public static class Extensions {
         builder.Services.AddOpenApi(opt => {
             opt.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
         });
-
-        builder.AddRedisDistributedCache("redis");
-
+        
+        builder.AddMongoDBClient("mongodb");
+        
+        builder.Services.AddFusionCache()
+            .WithDefaultEntryOptions(x =>
+            {
+                x.Duration = TimeSpan.FromMinutes(5);
+                x.DistributedCacheDuration = TimeSpan.FromMinutes(10);
+            }) 
+            .WithSerializer(new FusionCacheSystemTextJsonSerializer())
+            .WithDistributedCache(
+                new RedisCache(new RedisCacheOptions
+                {
+                    Configuration = builder.Configuration.GetConnectionString("redis"),
+                }))
+            .AsHybridCache();
+        
         builder.Services.AddScoped<SessionHandlerMiddleware>();
         
         builder.Services.AddHttpContextAccessor();

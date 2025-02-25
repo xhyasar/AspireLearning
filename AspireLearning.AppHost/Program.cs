@@ -12,6 +12,11 @@ if(jwtSettings is null)
 var sqlPassword = builder.AddParameter("sqlPassword", "Password12.");
 var sqlServer = builder.AddSqlServer("sqlServer", sqlPassword);
 
+var mongo = builder.AddMongoDB("mongo")
+    .WithMongoExpress();
+
+var mongoDb = mongo.AddDatabase("al-dev-001");
+
 var identityDb = sqlServer.AddDatabase("identityDb");
 var backofficeDb = sqlServer.AddDatabase("backofficeDb");
 var warehouseDb = sqlServer.AddDatabase("warehouseDb");
@@ -19,21 +24,25 @@ var warehouseDb = sqlServer.AddDatabase("warehouseDb");
 var redis = builder.AddRedis("redis");
 
 var identityService = builder.AddProject<Projects.AspireLearning_Identity>("identityservice")
+    .WithReference(mongoDb).WaitFor(mongoDb)
     .WithReference(identityDb).WaitFor(identityDb)
     .WithReference(redis).WaitFor(redis)
     .InjectJwtSettings(jwtSettings);
 
 var backofficeService = builder.AddProject<Projects.AspireLearning_Backoffice>("backofficeservice")
+    .WithReference(mongoDb).WaitFor(mongoDb)
     .WithReference(backofficeDb).WaitFor(backofficeDb)
     .WithReference(redis).WaitFor(redis)
     .InjectJwtSettings(jwtSettings);
 
 var warehouseService = builder.AddProject<Projects.AspireLearning_Warehouse>("warehouseservice")
+    .WithReference(mongoDb).WaitFor(mongoDb)
     .WithReference(warehouseDb).WaitFor(warehouseDb)
     .WithReference(redis).WaitFor(redis)
     .InjectJwtSettings(jwtSettings);
 
 var apiGateway = builder.AddProject<Projects.AspireLearning_ApiGateway>("apigateway")
+    .WithReference(mongoDb).WaitFor(mongoDb)
     .WithReference(identityService).WaitFor(identityService)
     .WithReference(backofficeService).WaitFor(backofficeService)
     .WithReference(warehouseService).WaitFor(warehouseService);

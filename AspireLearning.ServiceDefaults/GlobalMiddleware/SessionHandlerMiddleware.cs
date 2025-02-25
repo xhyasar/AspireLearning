@@ -1,13 +1,23 @@
-using System.Text.Json;
 using AspireLearning.ServiceDefaults.GlobalModel.Session;
 using AspireLearning.ServiceDefaults.GlobalUtility;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Hybrid;
+using MongoDB.Driver;
+// ReSharper disable All
 
 namespace AspireLearning.ServiceDefaults.GlobalMiddleware;
 
-public class SessionHandlerMiddleware(IDistributedCache cache) : IMiddleware
+public class SessionHandlerMiddleware : IMiddleware
 {
+    private readonly HybridCache _cache;
+    private readonly IMongoClient _mongoClient;
+
+    public SessionHandlerMiddleware(HybridCache cache, IMongoClient mongoClient)
+    {
+        _cache = cache;
+        _mongoClient = mongoClient;
+    }
+
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         var authHeader = context.Request.Headers.Authorization.ToString();
@@ -15,7 +25,7 @@ public class SessionHandlerMiddleware(IDistributedCache cache) : IMiddleware
             ? authHeader.Substring("Bearer ".Length).Trim()
             : string.Empty;
 
-        var acceptLanguage = context.Request.Headers["Accept-Language"].ToString();
+        var acceptLanguage = context.Request.Headers.AcceptLanguage.ToString();
         var language = LanguageParser.Parse(acceptLanguage);
 
         if (string.IsNullOrEmpty(token))
@@ -24,9 +34,10 @@ public class SessionHandlerMiddleware(IDistributedCache cache) : IMiddleware
             return;
         }
 
-        var session = await cache.GetStringAsync(token);
+        var session = await _cache.GetOrCreateAsync<SessionModel?>(token, async _ 
+            => await GetSessionFromMongoAsync(token));
         
-        if (string.IsNullOrEmpty(session))
+        if (session == null)
         {
             // Consider adding logging here
             context.Request.Headers.Authorization = string.Empty;
@@ -34,18 +45,22 @@ public class SessionHandlerMiddleware(IDistributedCache cache) : IMiddleware
             return;
         }
         
-        var sessionModel = JsonSerializer.Deserialize<SessionModel>(session);
-        if (sessionModel != null)
-        {
-            sessionModel.Language = language;
-            context.Items[nameof(SessionModel)] = sessionModel;
-        }
-        else
-        {
-            // Handle the unlikely scenario where sessionModel is null after deserialization
-            context.Request.Headers.Authorization = string.Empty;
-        }
+        session.Language = language;
+        context.Items[nameof(SessionModel)] = session;
         
         await next(context);
+    }
+
+    private async Task<SessionModel?> GetSessionFromMongoAsync(string token)
+    {
+        var sessionCollection = _mongoClient
+            .GetDatabase("al-dev-001")
+            .GetCollection<SessionModel>("Sessions");
+            
+        var sessionDocument = await sessionCollection
+            .Find(s => s.Token == token)
+            .FirstOrDefaultAsync();
+            
+        return sessionDocument;
     }
 }

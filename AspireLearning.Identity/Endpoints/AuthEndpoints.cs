@@ -7,6 +7,7 @@ using AspireLearning.Identity.Services;
 using AspireLearning.ServiceDefaults.GlobalModel.Session;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Hosting.GlobalModel.Identity;
 using Microsoft.IdentityModel.Tokens;
 using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
@@ -17,7 +18,7 @@ public static class AuthEndpoints
 {
     public static void MapAuthEndpoints(this WebApplication app)
     {
-        app.MapPost("auth/login", async ([FromBody]LoginModel model, UserService service, IDistributedCache cache) =>
+        app.MapPost("auth/login", async ([FromBody]LoginModel model, UserService service, HybridCache cache) =>
         {
             var user = await service.FindByEmailAsync(model.Email);
             
@@ -52,9 +53,7 @@ public static class AuthEndpoints
                 User = userTokenModel.User
             };
             
-            var json = JsonSerializer.Serialize(session);
-            
-            await cache.SetStringAsync(token, json);
+            await cache.SetAsync(token, session, tags: ["Session"]);
             
             return Results.Ok(userTokenModel);
         })

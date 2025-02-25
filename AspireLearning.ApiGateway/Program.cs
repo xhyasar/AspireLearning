@@ -1,5 +1,3 @@
-
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
