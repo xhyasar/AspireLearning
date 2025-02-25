@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using AspireLearning.ServiceDefaults.GlobalAttribute;
 using AspireLearning.ServiceDefaults.GlobalConstant;
 using AspireLearning.ServiceDefaults.GlobalInterface;
@@ -7,30 +8,7 @@ using Microsoft.Extensions.Hosting.GlobalConstant;
 
 namespace AspireLearning.Identity.Data.Entity;
 
-public class UserRole : IdentityUserRole<Guid>
-{
-    public User User { get; set; } = null!;
-    
-    public Role Role { get; set; } = null!;
-}
-
-public class UserRoleConfigurator : IEntityConfigurator
-{
-    public void Configure(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<UserRole>()
-            .HasOne(ur => ur.User)
-            .WithMany(u => u.UserRoles)
-            .HasForeignKey(ur => ur.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-        
-        modelBuilder.Entity<UserRole>()
-            .HasOne(ur => ur.Role)
-            .WithMany(u => u.UserRoles)
-            .HasForeignKey(ur => ur.RoleId)
-            .OnDelete(DeleteBehavior.Cascade);
-    }
-}
+public class UserRole : IdentityUserRole<Guid>;
 
 [SeedAfter(nameof(RoleSeeder))]
 [SeedAfter(nameof(UserSeeder))]

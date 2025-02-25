@@ -17,7 +17,7 @@ public static class AuthEndpoints
 {
     public static void MapAuthEndpoints(this WebApplication app)
     {
-        app.MapPost("api/identity/auth/login", async ([FromBody]LoginModel model, UserService service, IDistributedCache cache) =>
+        app.MapPost("auth/login", async ([FromBody]LoginModel model, UserService service, IDistributedCache cache) =>
         {
             var user = await service.FindByEmailAsync(model.Email);
             

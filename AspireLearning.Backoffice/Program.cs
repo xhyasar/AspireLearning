@@ -4,6 +4,8 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+builder.AddMicroserviceDefaults();
+
 builder.Services.AddProblemDetails();
 
 builder.AddSqlServerDbContext<Context>("backofficeDb");

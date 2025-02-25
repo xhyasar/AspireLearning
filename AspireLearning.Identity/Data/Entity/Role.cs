@@ -7,7 +7,7 @@ namespace AspireLearning.Identity.Data.Entity;
 
 public class Role : IdentityRole<Guid>
 {
-    public ICollection<UserRole>? UserRoles { get; set; } 
+    public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 }
 
 public class RoleSeeder : IEntitySeeder

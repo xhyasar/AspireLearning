@@ -28,8 +28,18 @@ public class User : IdentityUser<Guid>, IBaseEntity, IDeletableEntity, ITrackabl
     
     public bool IsDeleted { get; set; }
     public bool IsActive { get; set; }
-    
-    public ICollection<UserRole>? UserRoles { get; set; }
+
+    public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+}
+
+public class UserConfigurator : IEntityConfigurator
+{
+    public void Configure(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.TenantId)
+            .IsUnique(false);
+    }
 }
 
 public class UserSeeder : IEntitySeeder
@@ -60,7 +70,5 @@ public class UserSeeder : IEntitySeeder
                 IsDeleted = false,
                 IsActive = true,
             });
-        
-        
     }
 }

@@ -3,12 +3,15 @@ using AspireLearning.Identity.Data.Entity;
 using AspireLearning.Identity.Endpoints;
 using AspireLearning.Identity.Services;
 using AspireLearning.ServiceDefaults.GlobalMiddleware;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+builder.AddMicroserviceDefaults();
+
 builder.Services.AddProblemDetails();
 
 builder.AddSqlServerDbContext<Context>("identityDb");
@@ -24,8 +27,6 @@ builder.Services.AddScoped<UserService>();
 var app = builder.Build();
 
 app.UseExceptionHandler();
-app.UseHsts();
-app.UseHttpsRedirection();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -37,6 +38,9 @@ if (app.Environment.IsDevelopment())
     var context = scope.ServiceProvider.GetRequiredService<Context>();
     await context.Database.EnsureCreatedAsync();
 }
+
+app.UseHsts();
+app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseMiddleware<SessionHandlerMiddleware>();
