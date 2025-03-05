@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using AspireLearning.ServiceDefaults.GlobalAttribute;
 using AspireLearning.ServiceDefaults.GlobalConstant;
 using AspireLearning.ServiceDefaults.GlobalInterface;
 using Microsoft.AspNetCore.Identity;

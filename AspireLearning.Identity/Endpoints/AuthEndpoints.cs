@@ -1,16 +1,15 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Text.Json;
-using AspireLearning.Identity.Data.Entity;
 using AspireLearning.Identity.Services;
 using AspireLearning.ServiceDefaults.GlobalModel.Session;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Hosting.GlobalModel.Identity;
 using Microsoft.IdentityModel.Tokens;
 using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
+using User = AspireLearning.Identity.Data.Entity.User;
 
 namespace AspireLearning.Identity.Endpoints;
 
@@ -18,7 +17,7 @@ public static class AuthEndpoints
 {
     public static void MapAuthEndpoints(this WebApplication app)
     {
-        app.MapPost("auth/login", async ([FromBody]LoginModel model, UserService service, HybridCache cache) =>
+        app.MapPost("auth/login", async ([FromBody]LoginModel model, UserService service, HybridCache cache, CosmosClient cosmosClient) =>
         {
             var user = await service.FindByEmailAsync(model.Email);
             
@@ -49,9 +48,13 @@ public static class AuthEndpoints
             
             var session = new SessionModel
             {
+                UserId = userTokenModel.User.Id.ToString(),
                 Token = token,
                 User = userTokenModel.User
             };
+            
+            var sessionContainer = cosmosClient.GetContainer("al-dev-001", "Sessions");
+            await sessionContainer.CreateItemAsync(session, new PartitionKey(session.UserId));
             
             await cache.SetAsync(token, session, tags: ["Session"]);
             
@@ -84,7 +87,7 @@ public static class AuthEndpoints
             issuer,
             audience,
             claims,
-            expires: DateTime.Now.AddMinutes(30),
+            expires: DateTime.Now.AddMinutes(1),
             signingCredentials: credentials
         );
         

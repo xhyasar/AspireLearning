@@ -12,37 +12,45 @@ if(jwtSettings is null)
 var sqlPassword = builder.AddParameter("sqlPassword", "Password12.");
 var sqlServer = builder.AddSqlServer("sqlServer", sqlPassword);
 
-var mongo = builder.AddMongoDB("mongo")
-    .WithMongoExpress();
+#pragma warning disable ASPIRECOSMOSDB001
+var cosmos = builder.AddAzureCosmosDB("cosno-al-devtest-001")
+    .RunAsPreviewEmulator(x =>
+    {
+        x.WithGatewayPort(4567);
+        x.WithDataExplorer();
+    });
 
-var mongoDb = mongo.AddDatabase("al-dev-001");
+var cosmosDb = cosmos.AddCosmosDatabase("al-dev-001");
+cosmosDb.AddContainer("Sessions", "/UserId");
 
 var identityDb = sqlServer.AddDatabase("identityDb");
 var backofficeDb = sqlServer.AddDatabase("backofficeDb");
 var warehouseDb = sqlServer.AddDatabase("warehouseDb");
 
-var redis = builder.AddRedis("redis");
+var redis = builder.AddRedis("redis")
+    .WithRedisCommander()
+    .WithRedisInsight();
 
 var identityService = builder.AddProject<Projects.AspireLearning_Identity>("identityservice")
-    .WithReference(mongoDb).WaitFor(mongoDb)
+    .WithReference(cosmosDb).WaitFor(cosmosDb)
     .WithReference(identityDb).WaitFor(identityDb)
     .WithReference(redis).WaitFor(redis)
     .InjectJwtSettings(jwtSettings);
 
 var backofficeService = builder.AddProject<Projects.AspireLearning_Backoffice>("backofficeservice")
-    .WithReference(mongoDb).WaitFor(mongoDb)
+    .WithReference(cosmosDb).WaitFor(cosmosDb)
     .WithReference(backofficeDb).WaitFor(backofficeDb)
     .WithReference(redis).WaitFor(redis)
     .InjectJwtSettings(jwtSettings);
 
 var warehouseService = builder.AddProject<Projects.AspireLearning_Warehouse>("warehouseservice")
-    .WithReference(mongoDb).WaitFor(mongoDb)
+    .WithReference(cosmosDb).WaitFor(cosmosDb)
     .WithReference(warehouseDb).WaitFor(warehouseDb)
     .WithReference(redis).WaitFor(redis)
     .InjectJwtSettings(jwtSettings);
 
 var apiGateway = builder.AddProject<Projects.AspireLearning_ApiGateway>("apigateway")
-    .WithReference(mongoDb).WaitFor(mongoDb)
+    .WithReference(cosmosDb).WaitFor(cosmosDb)
     .WithReference(identityService).WaitFor(identityService)
     .WithReference(backofficeService).WaitFor(backofficeService)
     .WithReference(warehouseService).WaitFor(warehouseService);

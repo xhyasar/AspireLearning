@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +15,6 @@ using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using StackExchange.Redis;
 using ZiggyCreatures.Caching.Fusion;
 using ZiggyCreatures.Caching.Fusion.Serialization.SystemTextJson;
 
@@ -57,7 +55,7 @@ public static class Extensions {
             opt.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
         });
         
-        builder.AddMongoDBClient("mongodb");
+        builder.AddAzureCosmosClient("al-dev-001");
         
         builder.Services.AddFusionCache()
             .WithDefaultEntryOptions(x =>
@@ -81,7 +79,15 @@ public static class Extensions {
         {
             var httpContextAccessor = provider.GetRequiredService<IHttpContextAccessor>();
             var context = httpContextAccessor.HttpContext;
-            return context?.Items[nameof(SessionModel)] as SessionModel ?? new SessionModel();
+            return context?.Items[nameof(SessionModel)] as SessionModel ?? new SessionModel
+            {
+                Id = default,
+                UserId = default,
+                Token = default,
+                User = default,
+                CreatedAt = default,
+                Language = 0
+            };
         });
         
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

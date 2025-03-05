@@ -30,7 +30,7 @@ public class UserViewModel
 
     public string LastName { get; set; } = null!;
 
-    public string FullName { get; set; } = null!;
+    public string FullName => $"{FirstName} {LastName}";
 
     public string[] Roles { get; set; } = [];
 }

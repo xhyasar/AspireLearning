@@ -56,7 +56,6 @@ public static class UserEndpoints
                 Email = user.Email!,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                FullName = $"{user.FirstName} {user.LastName}",
                 Roles = roles.ToArray()
             };
             
@@ -81,7 +80,6 @@ public static class UserEndpoints
                 Email = user.Email!,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                FullName = $"{user.FirstName} {user.LastName}",
                 Roles = service.GetRolesAsync(user).Result.ToArray()
             }).ToList();
 

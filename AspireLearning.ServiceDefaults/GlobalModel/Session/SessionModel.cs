@@ -1,24 +1,27 @@
-using System.ComponentModel.DataAnnotations.Schema;
 using AspireLearning.ServiceDefaults.GlobalEnum;
 using Microsoft.Extensions.Hosting.GlobalModel.Identity;
+using Newtonsoft.Json;
 
 namespace AspireLearning.ServiceDefaults.GlobalModel.Session;
 
 public class SessionModel
 {
-    public Guid SessionId { get; set; } = Guid.NewGuid();
+    [JsonProperty("id")]
+    public string Id { get; set; } = Guid.NewGuid().ToString();
     
-    public string Token { get; set; } = null!;
+    public required string UserId { get; set; } = null!;
     
-    public UserViewModel User { get; set; } = new();
+    public required string Token { get; set; } = null!;
+    
+    public required UserViewModel User { get; set; } = new();
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     private DateTime ExpiresAt { get; set; } = DateTime.UtcNow.AddMinutes(30);
     
-    [NotMapped]
+    [JsonIgnore]
     public bool IsExpired => DateTime.UtcNow > ExpiresAt;
 
-    [NotMapped]
+    [JsonIgnore]
     public LanguageEnum Language { get; set; }
 }

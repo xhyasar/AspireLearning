@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
 using AspireLearning.ServiceDefaults.GlobalAttribute;
 using AspireLearning.ServiceDefaults.GlobalConstant;
 using AspireLearning.ServiceDefaults.GlobalInterface;

@@ -3,7 +3,6 @@ using AspireLearning.Identity.Data.Entity;
 using AspireLearning.Identity.Endpoints;
 using AspireLearning.Identity.Services;
 using AspireLearning.ServiceDefaults.GlobalMiddleware;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Scalar.AspNetCore;
 
