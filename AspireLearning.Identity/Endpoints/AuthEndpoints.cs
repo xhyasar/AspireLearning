@@ -17,7 +17,7 @@ public static class AuthEndpoints
 {
     public static void MapAuthEndpoints(this WebApplication app)
     {
-        app.MapPost("auth/login", async ([FromBody]LoginModel model, UserService service, HybridCache cache, CosmosClient cosmosClient) =>
+        app.MapPost("auth/login", async ([FromBody]LoginModel model, UserService service, HybridCache cache, [FromKeyedServices("Sessions")]Container sessionContainer) =>
         {
             var user = await service.FindByEmailAsync(model.Email);
             
@@ -53,7 +53,6 @@ public static class AuthEndpoints
                 User = userTokenModel.User
             };
             
-            var sessionContainer = cosmosClient.GetContainer("al-dev-001", "Sessions");
             await sessionContainer.CreateItemAsync(session, new PartitionKey(session.UserId));
             
             await cache.SetAsync(token, session, tags: ["Session"]);

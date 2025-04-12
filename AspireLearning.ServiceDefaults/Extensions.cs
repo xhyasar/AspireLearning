@@ -6,8 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Caching.StackExchangeRedis;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
@@ -15,8 +14,6 @@ using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using ZiggyCreatures.Caching.Fusion;
-using ZiggyCreatures.Caching.Fusion.Serialization.SystemTextJson;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -55,21 +52,19 @@ public static class Extensions {
             opt.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
         });
         
-        builder.AddAzureCosmosClient("al-dev-001");
+        builder.AddAzureCosmosDatabase("al-dev-001")
+            .AddKeyedContainer("Sessions");
+
+        builder.AddRedisDistributedCache("redis");
         
-        builder.Services.AddFusionCache()
-            .WithDefaultEntryOptions(x =>
+        builder.Services.AddHybridCache(o =>
+        {
+            o.DefaultEntryOptions = new HybridCacheEntryOptions
             {
-                x.Duration = TimeSpan.FromMinutes(5);
-                x.DistributedCacheDuration = TimeSpan.FromMinutes(10);
-            }) 
-            .WithSerializer(new FusionCacheSystemTextJsonSerializer())
-            .WithDistributedCache(
-                new RedisCache(new RedisCacheOptions
-                {
-                    Configuration = builder.Configuration.GetConnectionString("redis"),
-                }))
-            .AsHybridCache();
+                Expiration = TimeSpan.FromMinutes(10),
+                LocalCacheExpiration = TimeSpan.FromMinutes(5),
+            };
+        });
         
         builder.Services.AddScoped<SessionHandlerMiddleware>();
         

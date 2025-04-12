@@ -1,4 +1,5 @@
 using AspireLearning.Backoffice.Data.Context;
+using AspireLearning.ServiceDefaults.GlobalMiddleware;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +27,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHsts();
 app.UseHttpsRedirection();
+
+app.UseMiddleware<SessionHandlerMiddleware>();
 
 app.MapDefaultEndpoints();
 

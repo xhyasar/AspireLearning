@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.DependencyInjection;
+
 // ReSharper disable All
 
 namespace AspireLearning.ServiceDefaults.GlobalMiddleware;
@@ -15,10 +17,10 @@ public class SessionHandlerMiddleware : IMiddleware
     private readonly HybridCache _cache;
     private readonly Container _container;
 
-    public SessionHandlerMiddleware(HybridCache cache, CosmosClient client)
+    public SessionHandlerMiddleware(HybridCache cache, [FromKeyedServices("Sessions")]Container container)
     {
         _cache = cache;
-        _container = client.GetDatabase("al-dev-001").GetContainer("Sessions");
+        _container = container;
     }
 
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
@@ -48,7 +50,7 @@ public class SessionHandlerMiddleware : IMiddleware
         }
         
         var session = await _cache.GetOrCreateAsync<SessionModel?>(token, async _ 
-            => await GetSessionFromMongoAsync(userId, token));
+            => await GetSessionFromCosmosAsync(userId, token), tags: ["Session"]);
         
         if (session == null)
         {
@@ -64,9 +66,8 @@ public class SessionHandlerMiddleware : IMiddleware
         await next(context);
     }
 
-    private async Task<SessionModel?> GetSessionFromMongoAsync(string userId, string token)
+    private async Task<SessionModel?> GetSessionFromCosmosAsync(string userId, string token)
     {
-        
         return await _container.GetItemLinqQueryable<SessionModel>(
                 requestOptions: new QueryRequestOptions { PartitionKey = new PartitionKey(userId) })
             .FirstOrDefaultAsync(x => x.Token == token);

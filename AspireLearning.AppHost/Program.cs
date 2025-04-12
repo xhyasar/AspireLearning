@@ -10,14 +10,19 @@ if(jwtSettings is null)
     throw new InvalidConfigurationException("JwtSettings not found in configuration");
 
 var sqlPassword = builder.AddParameter("sqlPassword", "Password12.");
-var sqlServer = builder.AddSqlServer("sqlServer", sqlPassword);
+var sqlServer = builder.AddSqlServer("sqlServer", sqlPassword)
+    .WithLifetime(ContainerLifetime.Persistent);
+
+//var keycloak = builder.AddKeycloak("keycloak");
+
+//var signalR = builder.AddAzureSignalR("signalR").RunAsEmulator();
 
 #pragma warning disable ASPIRECOSMOSDB001
 var cosmos = builder.AddAzureCosmosDB("cosno-al-devtest-001")
     .RunAsPreviewEmulator(x =>
     {
-        x.WithGatewayPort(4567);
         x.WithDataExplorer();
+        x.WithLifetime(ContainerLifetime.Persistent);
     });
 
 var cosmosDb = cosmos.AddCosmosDatabase("al-dev-001");
@@ -28,7 +33,6 @@ var backofficeDb = sqlServer.AddDatabase("backofficeDb");
 var warehouseDb = sqlServer.AddDatabase("warehouseDb");
 
 var redis = builder.AddRedis("redis")
-    .WithRedisCommander()
     .WithRedisInsight();
 
 var identityService = builder.AddProject<Projects.AspireLearning_Identity>("identityservice")
