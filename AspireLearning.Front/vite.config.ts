@@ -15,7 +15,6 @@ export default defineConfig({
       '/api': {
         target: process.env.services__apigateway__https__0 || process.env.services__apigateway__http__0,
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
         secure: false,
       },
     },
