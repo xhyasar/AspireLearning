@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {createContext, useContext, useEffect, useState} from "react";
 
 interface User {
     id: string;
@@ -17,11 +17,27 @@ interface AuthContextType {
     login: (token: string, user: User) => void;
     logout: () => void;
     isAuthenticated: boolean;
+    isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider = ({children}: { children: React.ReactNode }) => {
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const storedToken = localStorage.getItem("token");
+        const storedUser = localStorage.getItem("user");
+
+        if (storedToken && storedUser) {
+            setToken(storedToken);
+            setUser(JSON.parse(storedUser));
+        }
+
+        setIsLoading(false); // ✅ iş bittiğinde yükleme tamam
+    }, []);
+
+
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
 
@@ -33,6 +49,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setToken(storedToken);
             setUser(JSON.parse(storedUser));
         }
+
+        setIsLoading(false); // ✅ isLoading burada güncelleniyor
     }, []);
 
     const login = (token: string, user: User) => {
@@ -49,9 +67,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
     };
 
+
     return (
         <AuthContext.Provider
-            value={{ user, token, login, logout, isAuthenticated: !!token }}
+            value={{user, token, login, logout, isAuthenticated: !!token, isLoading}}
         >
             {children}
         </AuthContext.Provider>

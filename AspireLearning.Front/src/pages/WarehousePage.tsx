@@ -36,7 +36,7 @@ export default function WarehousePage() {
 
   return (
       <FilterProvider>
-        <div className="p-6">
+        <div className="p-6 ">
           {/* Üst Arama Kutusu */}
           <div className="mb-4">
             <input

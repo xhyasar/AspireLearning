@@ -47,7 +47,7 @@ export default function LoginForm() {
 
             <form className="flex flex-col gap-8" onSubmit={handleSubmit}>
                 {/* Email */}
-                <div className="flex items-center border border-primary rounded px-3 py-2 bg-white">
+                <div className="flex items-center border border-primary rounded px-3 py-2 bg-white-secondary ">
                     <FiMail className="text-gray-666 mr-2" />
                     <input
                         type="email"
@@ -60,7 +60,7 @@ export default function LoginForm() {
                 </div>
 
                 {/* Password */}
-                <div className="flex items-center border border-primary rounded px-3 py-2 bg-white">
+                <div className="flex items-center border border-primary rounded px-3 py-2 bg-white-secondary">
                     <FiLock className="text-gray-666 mr-2" />
                     <input
                         type="password"
