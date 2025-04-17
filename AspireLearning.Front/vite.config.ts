@@ -28,3 +28,19 @@ export default defineConfig({
     },
   },
 });
+
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./src/**/*.{js,ts,jsx,tsx,mdx}" // dosya yollarını senin yapına göre düzenle
+  ],
+  theme: {
+    extend: {
+      fontFamily: {
+        poppins: ['Poppins', 'sans-serif'],
+      }
+    },
+  },
+  plugins: [],
+}
+

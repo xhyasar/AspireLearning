@@ -1,53 +1,74 @@
 // src/context/FilterContext.tsx
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useMemo } from "react";
 
-export type FilterKey = "status" | "country" | "city" | "category";
-
-interface FilterContextType {
-  activeFilters: FilterKey[];
-  filterValues: Record<FilterKey, string[]>;
-  addFilterKey: (key: FilterKey) => void;
-  removeFilterKey: (key: FilterKey) => void;
-  updateFilterValues: (key: FilterKey, values: string[]) => void;
+export interface FilterOption<T> {
+  key: keyof T;
+  label: string;
+  options: string[];
 }
 
-const FilterContext = createContext<FilterContextType | undefined>(undefined);
+export interface FilterContextType<T> {
+  activeFilters: (keyof T)[];
+  filterValues: Record<keyof T, string[]>;
+  addFilterKey: (key: keyof T) => void;
+  removeFilterKey: (key: keyof T) => void;
+  updateFilterValues: (key: keyof T, values: string[]) => void;
+}
 
-export const FilterProvider = ({ children }: { children: React.ReactNode }) => {
-  const [activeFilters, setActiveFilters] = useState<FilterKey[]>([]);
-  const [filterValues, setFilterValues] = useState<Record<FilterKey, string[]>>({
-    status: [],
-    country: [],
-    city: [],
-    category: [],
-  });
+// Context'i null başlangıç değeriyle oluştur
+const FilterContext = createContext<FilterContextType<any> | null>(null);
 
-  const addFilterKey = (key: FilterKey) => {
+export function FilterProvider<T extends Record<string, any>>({ 
+  children,
+  filterOptions
+}: { 
+  children: React.ReactNode;
+  filterOptions: FilterOption<T>[];
+}) {
+  const [activeFilters, setActiveFilters] = useState<(keyof T)[]>([]);
+  const [filterValues, setFilterValues] = useState<Record<keyof T, string[]>>(() =>
+    filterOptions.reduce((acc, option) => {
+      acc[option.key] = [];
+      return acc;
+    }, {} as Record<keyof T, string[]>)
+  );
+
+  const addFilterKey = (key: keyof T) => {
     if (!activeFilters.includes(key)) {
-      setActiveFilters([...activeFilters, key]);
+      setActiveFilters((prev) => [...prev, key]);
     }
   };
 
-  const removeFilterKey = (key: FilterKey) => {
-    setActiveFilters(activeFilters.filter((k) => k !== key));
+  const removeFilterKey = (key: keyof T) => {
+    setActiveFilters((prev) => prev.filter((k) => k !== key));
     setFilterValues((prev) => ({ ...prev, [key]: [] }));
   };
 
-  const updateFilterValues = (key: FilterKey, values: string[]) => {
+  const updateFilterValues = (key: keyof T, values: string[]) => {
     setFilterValues((prev) => ({ ...prev, [key]: values }));
   };
 
-  return (
-      <FilterContext.Provider
-          value={{ activeFilters, filterValues, addFilterKey, removeFilterKey, updateFilterValues }}
-      >
-        {children}
-      </FilterContext.Provider>
-  );
-};
+  // Context değerini useMemo ile optimize et
+  const contextValue = useMemo(() => ({
+    activeFilters,
+    filterValues,
+    addFilterKey,
+    removeFilterKey,
+    updateFilterValues
+  }), [activeFilters, filterValues]);
 
-export const useFilterContext = () => {
+  return (
+    <FilterContext.Provider value={contextValue as FilterContextType<T>}>
+      {children}
+    </FilterContext.Provider>
+  );
+}
+
+export function useFilterContext<T>() {
   const ctx = useContext(FilterContext);
-  if (!ctx) throw new Error("useFilterContext must be used within FilterProvider");
-  return ctx;
-};
+  if (!ctx) {
+    throw new Error("useFilterContext must be used within FilterProvider");
+  }
+  // Burada T tipine cast etmek yerine, Provider'da doğru tipi sağlıyoruz
+  return ctx as FilterContextType<T>;
+}
