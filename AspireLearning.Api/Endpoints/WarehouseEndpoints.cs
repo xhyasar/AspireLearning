@@ -18,10 +18,10 @@ public static class WarehouseEndpoints {
                     .FirstOrDefaultAsync(c => c.Id == model.City);
                 
                 if (city == null)
-                    return Results.BadRequest("Belirtilen şehir bulunamadı.");
+                    return Results.BadRequest("City.NotFound");
                 
                 if (city.CountryId != model.Country)
-                    return Results.BadRequest("Seçilen şehir, belirtilen ülkeye ait değil.");
+                    return Results.BadRequest("City.Country.Mismatch");
 
                 var warehouse = new Warehouse
                 {
@@ -80,7 +80,6 @@ public static class WarehouseEndpoints {
               
                 return Results.Ok(result);
             })
-            //.RequireAuthorization("Admin")
             .WithDescription("Get all warehouses with pagination")
             .Produces<PaginatedResult<WarehouseViewModel>>(200, "application/json")
             .Produces(StatusCodes.Status401Unauthorized)
@@ -98,7 +97,7 @@ public static class WarehouseEndpoints {
                 .FirstOrDefaultAsync(w => w.Id == id && w.TenantId == session.TenantId);
 
             if (warehouse == null)
-                return Results.NotFound("Depo bulunamadı.");
+                return Results.NotFound("Warehouse.NotFound");
 
             warehouse.Address = model.Address;
             warehouse.MapUrl = model.MapUrl;
@@ -123,17 +122,17 @@ public static class WarehouseEndpoints {
                 .FirstOrDefaultAsync(w => w.Id == id && w.TenantId == session.TenantId);
 
             if (warehouse == null)
-                return Results.NotFound("Depo bulunamadı.");
+                return Results.NotFound("Warehouse.NotFound");
 
             // City ve Country uyumluluğunu kontrol et
             var city = await context.Cities
                 .FirstOrDefaultAsync(c => c.Id == model.CityId);
 
             if (city == null)
-                return Results.BadRequest("Belirtilen şehir bulunamadı.");
+                return Results.BadRequest("City.NotFound");
 
             if (city.CountryId != model.CountryId)
-                return Results.BadRequest("Seçilen şehir, belirtilen ülkeye ait değil.");
+                return Results.BadRequest("City.Country.Mismatch");
 
             warehouse.CityId = model.CityId;
             warehouse.CountryId = model.CountryId;
@@ -159,7 +158,7 @@ public static class WarehouseEndpoints {
                 .FirstOrDefaultAsync(w => w.Id == id && w.TenantId == session.TenantId);
 
             if (warehouse == null)
-                return Results.NotFound("Depo bulunamadı.");
+                return Results.NotFound("Warehouse.NotFound");
 
             warehouse.Name = model.Name;
             warehouse.ModifiedAt = DateTime.UtcNow;
@@ -183,7 +182,7 @@ public static class WarehouseEndpoints {
                 .FirstOrDefaultAsync(w => w.Id == id && w.TenantId == session.TenantId);
 
             if (warehouse == null)
-                return Results.NotFound("Depo bulunamadı.");
+                return Results.NotFound("Warehouse.NotFound");
 
             warehouse.Status = model.Status;
             warehouse.ModifiedAt = DateTime.UtcNow;
@@ -207,14 +206,14 @@ public static class WarehouseEndpoints {
                 .FirstOrDefaultAsync(w => w.Id == id && w.TenantId == session.TenantId);
 
             if (warehouse == null)
-                return Results.NotFound("Depo bulunamadı.");
+                return Results.NotFound("Warehouse.NotFound");
 
             // Kullanıcı kontrolü
             var user = await context.Users
                 .FirstOrDefaultAsync(u => u.Id == model.PersonInChargeId && u.TenantId == session.TenantId);
 
             if (user == null)
-                return Results.BadRequest("Belirtilen kullanıcı bulunamadı");
+                return Results.BadRequest("PersonInCharge.NotFound");
 
             warehouse.PersonInChargeId = model.PersonInChargeId;
             warehouse.ModifiedAt = DateTime.UtcNow;
