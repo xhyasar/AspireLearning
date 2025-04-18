@@ -11,6 +11,8 @@ public class SessionModel
     
     public required string UserId { get; set; } = null!;
     
+    public required Guid TenantId { get; set; }
+    
     public required string Token { get; set; } = null!;
     
     public required UserViewModel User { get; set; } = new();

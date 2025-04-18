@@ -14,6 +14,7 @@
     <ItemGroup>
         <PackageReference Include="Aspire.Hosting.AppHost" Version="9.2.0" />
         <PackageReference Include="Aspire.Hosting.Azure.CosmosDB" Version="9.2.0" />
+        <PackageReference Include="Aspire.Hosting.Azure.ServiceBus" Version="9.2.0" />
         <PackageReference Include="Aspire.Hosting.Azure.SignalR" Version="9.2.0" />
         <PackageReference Include="Aspire.Hosting.Keycloak" Version="9.1.0-preview.1.25121.10" />
         <PackageReference Include="Aspire.Hosting.MongoDB" Version="9.2.0" />
@@ -23,10 +24,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\AspireLearning.Backoffice\AspireLearning.Backoffice.csproj" />
-      <ProjectReference Include="..\AspireLearning.ApiGateway\AspireLearning.ApiGateway.csproj" />
-      <ProjectReference Include="..\AspireLearning.Identity\AspireLearning.Identity.csproj" />
-      <ProjectReference Include="..\AspireLearning.Warehouse\AspireLearning.Warehouse.csproj" />
+      <ProjectReference Include="..\AspireLearning.Api\AspireLearning.Api.csproj" />
     </ItemGroup>
 
 </Project>

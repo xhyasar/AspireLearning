@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+        <PackageReference Include="Aspire.Azure.Messaging.ServiceBus" Version="9.2.0" />
         <PackageReference Include="Aspire.Microsoft.Azure.Cosmos" Version="9.2.0" />
         <PackageReference Include="Aspire.Microsoft.EntityFrameworkCore.SqlServer" Version="9.2.0" />
         <PackageReference Include="Aspire.StackExchange.Redis" Version="9.2.0" />

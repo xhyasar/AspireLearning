@@ -1,6 +1,11 @@
 // src/components/DropdownFilterPill.tsx
 import { useState } from "react";
-import { useFilters, FilterItem } from "../context/FilterContext";
+import { useFilterContext } from "../context/FilterContext";
+
+interface FilterItem {
+    key: string;
+    value: string;
+}
 
 interface Props {
     label: string;
@@ -10,23 +15,21 @@ interface Props {
 export default function DropdownFilterPill({ label, options }: Props) {
     const [open, setOpen] = useState(false);
     const key = label.toLowerCase() as FilterItem["key"];
-    const { filters, addFilter, removeFilter } = useFilters();
+    const { filterValues, updateFilterValues } = useFilterContext<Record<string, any>>();
 
-    const selectedValues = filters
-        .filter((f) => f.key === key)
-        .map((f) => f.value);
+    const selectedValues = filterValues[key] || [];
 
     const toggleValue = (value: string) => {
         const exists = selectedValues.includes(value);
         if (exists) {
-            removeFilter({ key, value });
+            updateFilterValues(key, selectedValues.filter(v => v !== value));
         } else {
-            addFilter({ key, value });
+            updateFilterValues(key, [...selectedValues, value]);
         }
     };
 
     const handleClose = (value: string) => {
-        removeFilter({ key, value });
+        updateFilterValues(key, selectedValues.filter(v => v !== value));
     };
 
     const hasAny = selectedValues.length > 0;

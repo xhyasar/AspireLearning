@@ -33,37 +33,32 @@ public class SessionHandlerMiddleware : IMiddleware
         var acceptLanguage = context.Request.Headers.AcceptLanguage.ToString();
         var language = LanguageParser.Parse(acceptLanguage);
 
-        if (string.IsNullOrEmpty(token))
+        if (!string.IsNullOrEmpty(token))
         {
-            await next(context);
-            return;
-        }
-        
-        var parsedToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
-        var userId = parsedToken.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+            try
+            {
+                var parsedToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
+                var userId = parsedToken.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
 
-        if (string.IsNullOrEmpty(userId))
-        {
-            context.Request.Headers.Authorization = string.Empty;
-            await next(context);
-            return;
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    var session = await _cache.GetOrCreateAsync<SessionModel?>(token, async _ =>
+                        await GetSessionFromCosmosAsync(userId, token), tags: ["Session"]);
+
+                    if (session != null)
+                    {
+                        session.Language = language;
+                        context.Items[nameof(SessionModel)] = session;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                // log if needed
+            }
         }
-        
-        var session = await _cache.GetOrCreateAsync<SessionModel?>(token, async _ 
-            => await GetSessionFromCosmosAsync(userId, token), tags: ["Session"]);
-        
-        if (session == null)
-        {
-            // Consider adding logging here
-            context.Request.Headers.Authorization = string.Empty;
-            await next(context);
-            return;
-        }
-        
-        session.Language = language;
-        context.Items[nameof(SessionModel)] = session;
-        
-        await next(context);
+        await next(context); // sadece bir kez
     }
 
     private async Task<SessionModel?> GetSessionFromCosmosAsync(string userId, string token)

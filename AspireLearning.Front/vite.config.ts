@@ -13,7 +13,7 @@ export default defineConfig({
     port: Number(process.env.PORT) || 4001,
     proxy: {
       '/api': {
-        target: process.env.services__apigateway__https__0 || process.env.services__apigateway__http__0,
+        target: process.env.services__api__https__0 || process.env.services__api__http__0,
         changeOrigin: true,
         secure: false,
       },
@@ -28,19 +28,4 @@ export default defineConfig({
     },
   },
 });
-
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: [
-    "./src/**/*.{js,ts,jsx,tsx,mdx}" // dosya yollarını senin yapına göre düzenle
-  ],
-  theme: {
-    extend: {
-      fontFamily: {
-        poppins: ['Poppins', 'sans-serif'],
-      }
-    },
-  },
-  plugins: [],
-}
 

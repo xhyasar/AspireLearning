@@ -1,13 +1,13 @@
 // src/components/FilterModal.tsx
-import { useFilters } from "../context/FilterContext";
+import { useFilterContext } from "../context/FilterContext";
 
 export default function FilterModal({ onClose }: { onClose: () => void }) {
-    const { addFilter } = useFilters();
+    const { updateFilterValues } = useFilterContext<Record<string, any>>();
 
     // Burada toplu seçim yapılabilir (örnek için sadeleştirilmiş)
     const apply = () => {
-        addFilter({ key: "status", value: "active" });
-        addFilter({ key: "country", value: "Türkiye" });
+        updateFilterValues("status", ["active"]);
+        updateFilterValues("country", ["Türkiye"]);
         onClose();
     };
 

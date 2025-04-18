@@ -52,7 +52,7 @@ public static class Extensions {
             opt.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
         });
         
-        builder.AddAzureCosmosDatabase("al-dev-001")
+        builder.AddAzureCosmosDatabase("cosno-al-dev-001")
             .AddKeyedContainer("Sessions");
 
         builder.AddRedisDistributedCache("redis");
@@ -80,6 +80,7 @@ public static class Extensions {
                 UserId = default,
                 Token = default,
                 User = default,
+                TenantId = default,
                 CreatedAt = default,
                 Language = 0
             };
