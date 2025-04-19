@@ -1,8 +1,7 @@
-using AspireLearning.ServiceDefaults.GlobalInterface;
-
 namespace AspireLearning.Api.Data.Entity;
 
 using Microsoft.EntityFrameworkCore;
+using ServiceDefaults.GlobalInterface;
 
 public class ProductStock : IBaseEntity, IDeletableEntity
 {
