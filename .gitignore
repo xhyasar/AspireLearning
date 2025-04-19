@@ -11,3 +11,5 @@
 *.user
 *.userosscache
 *.sln.docstates
+.DS_Store
+.idea/

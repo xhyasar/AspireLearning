@@ -85,7 +85,6 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<RoleService>();
 
 var app = builder.Build();
 

@@ -65,9 +65,32 @@ public class SessionHandlerMiddleware : IMiddleware
                         {
                             session.Language = language;
                             
-                            // Validate işleminden sonra oluşturulan ClaimsPrincipal'i HttpContext.User'a aktar
-                            context.User = tokenValidationResult.ClaimsPrincipal!;
+                            // Create a new ClaimsPrincipal with both roles and permissions
+                            var identity = new ClaimsIdentity(tokenValidationResult.ClaimsPrincipal?.Identity);
                             
+                            // Ensure permissions from session are in the claims
+                            if (session.User.Permissions != null && session.User.Permissions.Length > 0)
+                            {
+                                // Check if permissions are already in the claims
+                                var existingPermissionClaims = identity.Claims
+                                    .Where(c => c.Type == "Permission")
+                                    .Select(c => c.Value)
+                                    .ToHashSet();
+                                
+                                // Add any missing permission claims
+                                foreach (var permission in session.User.Permissions)
+                                {
+                                    if (!existingPermissionClaims.Contains(permission))
+                                    {
+                                        identity.AddClaim(new Claim("Permission", permission));
+                                    }
+                                }
+                            }
+                            
+                            // Create new ClaimsPrincipal with updated identity
+                            var principal = new ClaimsPrincipal(identity);
+                            
+                            context.User = principal;
                             context.Items[nameof(SessionModel)] = session;
                             _logger.LogInformation("Session successfully validated and set for user: {UserId}", userId);
                         }
