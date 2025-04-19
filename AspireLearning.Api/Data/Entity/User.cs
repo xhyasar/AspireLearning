@@ -86,7 +86,7 @@ public class UserRoleSeeder : IEntitySeeder
             new IdentityUserRole<Guid>
             {
                 UserId = UserConstants.Id,
-                RoleId = RoleConstants.Admin.Id
+                RoleId = RoleConstants.SuperAdmin.Id
             }
         );
     }

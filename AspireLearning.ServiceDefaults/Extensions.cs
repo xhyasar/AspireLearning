@@ -86,24 +86,64 @@ public static class Extensions {
             };
         });
         
-        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
+        var secretKey = jwtSettingsSection["SecretKey"];
+        var issuer = jwtSettingsSection["Issuer"];
+        var audience = jwtSettingsSection["Audience"];
+
+        // JWT ayarlarının mevcut olduğunu kontrol et ve hataları logla
+        if (string.IsNullOrEmpty(secretKey))
+        {
+            builder.Services.AddSingleton<ILogger>(sp => sp.GetRequiredService<ILogger<ILogger>>());
+            var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger>();
+            logger.LogError("JWT SecretKey is missing in configuration");
+        }
+        
+        builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
             .AddJwtBearer(options =>
             {
-                var secretKey = builder.Configuration["JwtSettings:SecretKey"];
-                var key = Encoding.ASCII.GetBytes(secretKey!);
-                var issuer = builder.Configuration["JwtSettings:Issuer"];
-                var audience = builder.Configuration["JwtSettings:Audience"];
-        
+                var key = Encoding.ASCII.GetBytes(secretKey ?? "DefaultSecretKeyForDevelopment-ThisIsNotSecure");
+                
+                options.SaveToken = true;
+                options.RequireHttpsMetadata = false; // Geliştirme ortamında false olabilir
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
+                    ValidateIssuer = !string.IsNullOrEmpty(issuer),
+                    ValidateAudience = !string.IsNullOrEmpty(audience),
                     ValidateLifetime = true,
                     ValidIssuer = issuer,
                     ValidAudience = audience,
                     ClockSkew = TimeSpan.Zero
+                };
+                
+                // Token doğrulama hatalarını loglama
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerEvents>>();
+                        logger.LogError(context.Exception, "JWT Authentication failed: {Message}", context.Exception.Message);
+                        return Task.CompletedTask;
+                    },
+                    OnTokenValidated = context =>
+                    {
+                        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerEvents>>();
+                        logger.LogInformation("JWT token successfully validated for: {Name}", context.Principal?.Identity?.Name);
+                        return Task.CompletedTask;
+                    },
+                    OnMessageReceived = context =>
+                    {
+                        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerEvents>>();
+                        logger.LogInformation("JWT token received: {Token}", context.Token?.Substring(0, Math.Min(10, context.Token?.Length ?? 0)));
+                        return Task.CompletedTask;
+                    }
                 };
             });
 

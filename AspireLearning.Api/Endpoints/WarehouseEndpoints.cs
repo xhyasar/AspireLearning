@@ -31,7 +31,8 @@ public static class WarehouseEndpoints {
                     CityId = model.City,
                     MapUrl = model.MapUrl,
                     Address = model.Address,
-                    TenantId = session.TenantId
+                    TenantId = session.TenantId,
+                    CategoryId = model.CategoryId
                 };
 
                 context.Warehouses.Add(warehouse);
@@ -39,6 +40,7 @@ public static class WarehouseEndpoints {
 
                 return Results.Created($"/warehouse", null);
             })
+            .WithTags("WarehouseOperations")
             .WithDescription("Create a new warehouse")
             .Produces(StatusCodes.Status201Created);
 
@@ -70,7 +72,8 @@ public static class WarehouseEndpoints {
                     x.Name,
                     x.City!.Texts!.FirstOrDefault(ct => ct.Language == session.Language)!.Name,
                     x.Country!.Texts!.FirstOrDefault(ct => ct.Language == session.Language)!.Name,
-                    x.LastActivity
+                    x.LastActivity,
+                    x.Category!.Name
                 )).ToListAsync();
 
                 var result = new PaginatedResult<WarehouseViewModel>
@@ -80,6 +83,7 @@ public static class WarehouseEndpoints {
               
                 return Results.Ok(result);
             })
+            .WithTags("WarehouseOperations")
             .WithDescription("Get all warehouses with pagination")
             .Produces<PaginatedResult<WarehouseViewModel>>(200, "application/json")
             .Produces(StatusCodes.Status401Unauthorized)
@@ -107,6 +111,7 @@ public static class WarehouseEndpoints {
             await context.SaveChangesAsync();
             return Results.Ok();
         })
+        .WithTags("WarehouseOperations")
         .WithDescription("Update warehouse address and map URL")
         .Produces(200)
         .Produces(404);
@@ -142,6 +147,7 @@ public static class WarehouseEndpoints {
             await context.SaveChangesAsync();
             return Results.Ok();
         })
+        .WithTags("WarehouseOperations")
         .WithDescription("Update warehouse city and country")
         .Produces(200)
         .Produces(404)
@@ -167,6 +173,7 @@ public static class WarehouseEndpoints {
             await context.SaveChangesAsync();
             return Results.Ok();
         })
+        .WithTags("WarehouseOperations")
         .WithDescription("Update warehouse name")
         .Produces(200)
         .Produces(404);
@@ -191,6 +198,7 @@ public static class WarehouseEndpoints {
             await context.SaveChangesAsync();
             return Results.Ok();
         })
+        .WithTags("WarehouseOperations")
         .WithDescription("Update warehouse status")
         .Produces(200)
         .Produces(404);
@@ -222,6 +230,7 @@ public static class WarehouseEndpoints {
             await context.SaveChangesAsync();
             return Results.Ok();
         })
+        .WithTags("WarehouseOperations")
         .WithDescription("Update warehouse person in charge")
         .Produces(200)
         .Produces(404)
@@ -229,8 +238,8 @@ public static class WarehouseEndpoints {
     }
 }
 
-public record WarehouseCreateModel(string Name, Guid PersonInChargeId, Guid City, Guid Country, string? MapUrl, string Address);
-public record WarehouseViewModel(Guid Id, string Name, string City, string Country, DateTime LastActivity);
+public record WarehouseCreateModel(string Name, Guid PersonInChargeId, Guid City, Guid Country, string? MapUrl, string Address, Guid CategoryId);
+public record WarehouseViewModel(Guid Id, string Name, string City, string Country, DateTime LastActivity, string CategoryName);
 public record WarehouseQueryFilterModel(string? SearchName, string? SortBy, string? SortDirection, int? PageNumber, int? PageSize) : IParsable<WarehouseQueryFilterModel>
 {
     public static WarehouseQueryFilterModel Parse(string s, IFormatProvider? provider) => new(null, null, null, null, null);

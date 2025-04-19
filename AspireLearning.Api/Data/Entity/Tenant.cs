@@ -10,6 +10,12 @@ public class Tenant : IBaseEntity, IDeletableEntity, ITrackableEntity
     
     public string Name { get; set; } = null!;
     
+    public string ContactName { get; set; } = null!;
+    
+    public string ContactEmail { get; set; } = null!;
+    
+    public string ContactPhone { get; set; } = null!;
+    
     public ICollection<User>? Users { get; set; }
     public ICollection<TenantDomain>? Domains { get; set; }
     
@@ -42,6 +48,18 @@ public class TenantConfigurator : IEntityConfigurator
             entity.Property(t => t.Name)
                 .IsRequired()
                 .HasMaxLength(255);
+            
+            entity.Property(t => t.ContactName)
+                .IsRequired()
+                .HasMaxLength(255);
+            
+            entity.Property(t => t.ContactEmail)
+                .IsRequired()
+                .HasMaxLength(255);
+            
+            entity.Property(t => t.ContactPhone)
+                .IsRequired()
+                .HasMaxLength(50);
             
             entity.HasIndex(t => t.Name).IsUnique();
             
@@ -82,6 +100,9 @@ public class TenantSeeder : IEntitySeeder
             {
                 Id = TenantConstants.Id,
                 Name = TenantConstants.Name,
+                ContactName = TenantConstants.ContactName,
+                ContactEmail = TenantConstants.ContactEmail,
+                ContactPhone = TenantConstants.ContactPhone,
                 CreatedAt = DateTime.UtcNow,
                 IsActive = true,
                 IsDeleted = false

@@ -13,11 +13,17 @@ public enum WarehouseStatus
 public class Warehouse : IBaseEntity, IDeletableEntity, ITrackableEntity
 {
     public Guid Id { get; set; }
-    public Guid TenantId { get; set; }
     public string Name { get; set; } = null!;
     public string Address { get; set; } = null!;
     public string? MapUrl { get; set; }
+
+    public Guid TenantId { get; set; }
+    public Tenant? Tenant { get; set; }
+
     public WarehouseStatus Status { get; set; } = WarehouseStatus.Active;
+
+    public Guid CategoryId { get; set; }
+    public WarehouseCategory? Category { get; set; }
     
     public Guid CountryId { get; set; }
     public Country? Country { get; set; }
@@ -68,7 +74,10 @@ public class WarehouseConfigurator : IEntityConfigurator
                 .IsRequired()
                 .HasDefaultValue(WarehouseStatus.Active);
 
-            entity.HasIndex(w => w.TenantId).IsUnique(false);
+            entity.HasOne(w => w.Tenant)
+                .WithMany()
+                .HasForeignKey(w => w.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(w => w.PersonInCharge)
                 .WithMany()
@@ -89,6 +98,11 @@ public class WarehouseConfigurator : IEntityConfigurator
                 .WithMany()
                 .HasForeignKey(w => w.RemovedBy)
                 .OnDelete(DeleteBehavior.NoAction);
+            
+            entity.HasOne(w => w.Category)
+                .WithMany(c => c.Warehouses)
+                .HasForeignKey(w => w.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
             
             //entity.HasMany(w => w.Stocks)
             //    .WithOne(s => s.Warehouse)

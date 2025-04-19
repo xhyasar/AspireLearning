@@ -9,7 +9,10 @@ using Microsoft.Extensions.Hosting.GlobalModel.Identity;
 
 namespace AspireLearning.Api.Endpoints;
 
+using Data.Context;
 using Data.Entity;
+using Microsoft.AspNetCore.Authorization;
+using ServiceDefaults.GlobalConstant;
 using Services;
 
 public static class UserEndpoints {
@@ -34,6 +37,7 @@ public static class UserEndpoints {
                 
                 return identityResult.Succeeded ? Results.Ok() : Results.BadRequest(identityResult.Errors);
             })
+            .WithTags("UserOperations")
             .WithDescription("Register to the system")
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest);
@@ -56,10 +60,59 @@ public static class UserEndpoints {
 
                 return Results.Ok(userViewModel);
             })
+            .WithTags("UserOperations")
             .WithDescription("Get current user details")
             .Produces<UserViewModel>(StatusCodes.Status200OK, "application/json")
             .Produces(StatusCodes.Status404NotFound);
+        
+        app.MapGet("user/contextTest", (HttpContext context) => {
+            var userBool = context.User.Identity?.IsAuthenticated;
+            
+            return userBool.HasValue ? Results.Ok(userBool.Value) : Results.NotFound();
+        })
+        .WithTags("UserOperations")
+        .WithDescription("Test user context")
+        .Produces<bool>(StatusCodes.Status200OK, "application/json")
+        .Produces(StatusCodes.Status404NotFound);
+        
+        app.MapGet("user/contextTest/SuperAdmin",(HttpContext context) => {
+                var userBool = context.User.Identity?.IsAuthenticated;
+            
+                return userBool.HasValue ? Results.Ok(userBool.Value) : Results.NotFound();
+            })
+            .WithTags("UserOperations")
+            .WithDescription("Test user context")
+            .RequireAuthorization("SuperAdmin")
+            .Produces<bool>(StatusCodes.Status200OK, "application/json")
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound);
+        
+        app.MapGet("user/contextTest/SuperAdminPolicy",(HttpContext context) => {
+                var userBool = context.User.Identity?.IsAuthenticated;
+            
+                return userBool.HasValue ? Results.Ok(userBool.Value) : Results.NotFound();
+            })
+            .WithTags("UserOperations")
+            .WithDescription("Test user context")
+            .RequireAuthorization("SuperAdminPolicy")
+            .Produces<bool>(StatusCodes.Status200OK, "application/json")
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound);
 
+        app.MapGet("user/contextTest/RandomPolicy",[Authorize(Permissions.Product.Add)](HttpContext context) => {
+                var userBool = context.User.Identity?.IsAuthenticated;
+            
+                return userBool.HasValue ? Results.Ok(userBool.Value) : Results.NotFound();
+            })
+            .WithTags("UserOperations")
+            .WithDescription("Test user context")
+            .Produces<bool>(StatusCodes.Status200OK, "application/json")
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound);
+        
         app.MapGet("user/all", async ([FromServices] UserService service) => {
                 var users = await service.Users
                     .ToListAsync();
@@ -78,6 +131,7 @@ public static class UserEndpoints {
 
                 return Results.Ok(userViewModels);
             })
+            .WithTags("UserOperations")
             .WithDescription("Get all users")
             .Produces<List<UserViewModel>>()
             .Produces(StatusCodes.Status204NoContent)
