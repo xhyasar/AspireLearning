@@ -80,6 +80,7 @@ public static class AuthEndpoints
                 TenantId = userViewModel.TenantId,
                 User = new UserSessionModel
                 {
+                    Email = userViewModel.Email,
                     FirstName = userViewModel.FirstName,
                     LastName = userViewModel.LastName,
                     Roles = userViewModel.Roles,
