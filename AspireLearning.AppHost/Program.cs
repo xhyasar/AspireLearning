@@ -39,6 +39,6 @@ builder.AddNpmApp("web","../AspireLearning.Front")
     .WithReference(api).WaitFor(api)
     .WithHttpEndpoint(env: "PORT", port: 60000)
     .WithExternalHttpEndpoints()
-    .PublishAsDockerFile();
+    .PublishAsDockerFile(); 
 
 await builder.Build().RunAsync();

@@ -4,10 +4,10 @@ namespace AspireLearning.ServiceDefaults.GlobalUtility;
 
 public static class LanguageParser
 {
-    public static LanguageEnum Parse(string acceptLanguage)
+    public static Language Parse(string acceptLanguage)
     {
         if (string.IsNullOrWhiteSpace(acceptLanguage))
-            return LanguageEnum.TR; // Default language
+            return Language.TR; // Default language
 
         try
         {
@@ -18,16 +18,16 @@ public static class LanguageParser
                 if (langCode.Length > 2)
                     langCode = langCode.Substring(0, 2);
 
-                if (Enum.TryParse<LanguageEnum>(langCode, ignoreCase: true, out var parsedLanguage))
+                if (Enum.TryParse<Language>(langCode, ignoreCase: true, out var parsedLanguage))
                     return parsedLanguage;
             }
         }
-        catch (Exception ex)
+        catch
         {
             // Log exception and return default language
         }
 
-        return LanguageEnum.TR; // Default fallback
+        return Language.TR; // Default fallback
     }
 }
 

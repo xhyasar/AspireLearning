@@ -4,6 +4,7 @@ using Data.Context;
 using Data.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ServiceDefaults.GlobalConstant;
 using ServiceDefaults.GlobalModel.Session;
 using ServiceDefaults.GlobalUtility;
 
@@ -42,51 +43,59 @@ public static class ProductStockEndpoints
 
             return Results.Created($"/product-stock", null);
         })
-        .WithTags("ProductStockOperations")
+        .WithTags(EndpointConstants.ProductStockOperations)
         .WithDescription("Create a new product stock")
+        .RequireAuthorization(Permissions.Stock.Add)
         .Produces(StatusCodes.Status201Created);
 
         app.MapGet("/product-stock", async (
-            [FromQuery] ProductStockQueryFilterModel query,
             [FromServices] Context context,
-            [FromServices] SessionModel session) =>
+            [FromServices] SessionModel session,
+            [FromQuery] Guid? productId,
+            [FromQuery] Guid? warehouseId,
+            [FromQuery] decimal? minQuantity,
+            [FromQuery] decimal? maxQuantity,
+            [FromQuery] string? sortBy,
+            [FromQuery] string? sortDirection,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10) =>
         {
             var stocks = context.ProductStocks
                 .Include(ps => ps.Product)
                 .Include(ps => ps.Warehouse)
-                .Where(ps => ps.Product.TenantId == session.TenantId);
+                .Where(ps => ps.Product!.TenantId == session.TenantId);
 
-            if (query.ProductId.HasValue)
-                stocks = stocks.Where(ps => ps.ProductId == query.ProductId);
+            if (productId.HasValue)
+                stocks = stocks.Where(ps => ps.ProductId == productId);
 
-            if (query.WarehouseId.HasValue)
-                stocks = stocks.Where(ps => ps.WarehouseId == query.WarehouseId);
+            if (warehouseId.HasValue)
+                stocks = stocks.Where(ps => ps.WarehouseId == warehouseId);
 
-            if (query.MinQuantity.HasValue)
-                stocks = stocks.Where(ps => ps.Quantity <= query.MinQuantity);
+            if (minQuantity.HasValue)
+                stocks = stocks.Where(ps => ps.Quantity <= minQuantity);
 
-            if (query.MaxQuantity.HasValue)
-                stocks = stocks.Where(ps => ps.Quantity >= query.MaxQuantity);
+            if (maxQuantity.HasValue)
+                stocks = stocks.Where(ps => ps.Quantity >= maxQuantity);
 
-            stocks = query.SortBy?.ToLower() switch
+            stocks = sortBy?.ToLower() switch
             {
-                "quantity" when query.SortDirection == "desc" => stocks.OrderByDescending(ps => ps.Quantity),
+                "quantity" when sortDirection == "desc" => stocks.OrderByDescending(ps => ps.Quantity),
                 "quantity" => stocks.OrderBy(ps => ps.Quantity),
-                "product" when query.SortDirection == "desc" => stocks.OrderByDescending(ps => ps.Product.Name),
-                "product" => stocks.OrderBy(ps => ps.Product.Name),
-                "warehouse" when query.SortDirection == "desc" => stocks.OrderByDescending(ps => ps.Warehouse.Name),
-                "warehouse" => stocks.OrderBy(ps => ps.Warehouse.Name),
-                _ => stocks.OrderBy(ps => ps.Product.Name)
+                "product" when sortDirection == "desc" => stocks.OrderByDescending(ps => ps.Product != null ? ps.Product.Name : string.Empty),
+                "product" => stocks.OrderBy(ps => ps.Product != null ? ps.Product.Name : string.Empty),
+                "warehouse" when sortDirection == "desc" => stocks.OrderByDescending(ps => ps.Warehouse != null ? ps.Warehouse.Name : string.Empty),
+                "warehouse" => stocks.OrderBy(ps => ps.Warehouse != null ? ps.Warehouse.Name : string.Empty),
+                _ => stocks.OrderBy(ps => ps.Product != null ? ps.Product.Name : string.Empty)
             };
 
             var totalCount = await stocks.CountAsync();
-            var paginatedQuery = stocks.Skip((int)((query.PageNumber - 1) * query.PageSize)!).Take((int)query.PageSize!);
+            var paginatedQuery = stocks.Skip((pageNumber - 1) * pageSize).Take(pageSize);
 
             var queryResult = await paginatedQuery.Select(x => new ProductStockViewModel
             (
                 x.Id,
-                x.Product.Name,
-                x.Warehouse.Name,
+                x.Product != null ? x.Product.Name : string.Empty,
+                x.Warehouse != null ? x.Warehouse.Name : string.Empty,
                 x.Quantity,
                 x.MinimumQuantity,
                 x.MaximumQuantity
@@ -95,15 +104,16 @@ public static class ProductStockEndpoints
             var result = new PaginatedResult<ProductStockViewModel>
             {
                 TotalCount = totalCount,
-                PageNumber = (int)query.PageNumber!,
-                PageSize = (int)query.PageSize!,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
                 Data = queryResult
             };
 
             return Results.Ok(result);
         })
-        .WithTags("ProductStockOperations")
+        .WithTags(EndpointConstants.ProductStockOperations)
         .WithDescription("Get all product stocks with pagination")
+        .RequireAuthorization(Permissions.Stock.Read)
         .Produces<PaginatedResult<ProductStockViewModel>>(200, "application/json");
 
         app.MapPatch("/product-stock/{id}", async (
@@ -114,7 +124,7 @@ public static class ProductStockEndpoints
         {
             var stock = await context.ProductStocks
                 .Include(ps => ps.Product)
-                .FirstOrDefaultAsync(ps => ps.Id == id && ps.Product.TenantId == session.TenantId);
+                .FirstOrDefaultAsync(ps => ps.Id == id && ps.Product != null && ps.Product.TenantId == session.TenantId);
 
             if (stock == null)
                 return Results.NotFound("ProductStock.NotFound");
@@ -128,8 +138,9 @@ public static class ProductStockEndpoints
             await context.SaveChangesAsync();
             return Results.Ok();
         })
-        .WithTags("ProductStockOperations")
+        .WithTags(EndpointConstants.ProductStockOperations)
         .WithDescription("Update product stock")
+        .RequireAuthorization(Permissions.Stock.Update)
         .Produces(200)
         .Produces(404);
 
@@ -140,7 +151,7 @@ public static class ProductStockEndpoints
         {
             var stock = await context.ProductStocks
                 .Include(ps => ps.Product)
-                .FirstOrDefaultAsync(ps => ps.Id == id && ps.Product.TenantId == session.TenantId);
+                .FirstOrDefaultAsync(ps => ps.Id == id && ps.Product != null && ps.Product.TenantId == session.TenantId);
 
             if (stock == null)
                 return Results.NotFound("ProductStock.NotFound");
@@ -152,8 +163,9 @@ public static class ProductStockEndpoints
             await context.SaveChangesAsync();
             return Results.Ok();
         })
-        .WithTags("ProductStockOperations")
+        .WithTags(EndpointConstants.ProductStockOperations)
         .WithDescription("Delete product stock")
+        .RequireAuthorization(Permissions.Stock.Delete)
         .Produces(200)
         .Produces(404);
     }
@@ -161,13 +173,4 @@ public static class ProductStockEndpoints
 
 public record ProductStockCreateModel(Guid ProductId, Guid WarehouseId, decimal Quantity, decimal MinimumQuantity, decimal MaximumQuantity);
 public record ProductStockViewModel(Guid Id, string ProductName, string WarehouseName, decimal Quantity, decimal MinimumQuantity, decimal MaximumQuantity);
-public record ProductStockQueryFilterModel(Guid? ProductId, Guid? WarehouseId, decimal? MinQuantity, decimal? MaxQuantity, string? SortBy, string? SortDirection, int? PageNumber, int? PageSize) : IParsable<ProductStockQueryFilterModel>
-{
-    public static ProductStockQueryFilterModel Parse(string s, IFormatProvider? provider) => new(null, null, null, null, null, null, null, null);
-    public static bool TryParse(string? s, IFormatProvider? provider, out ProductStockQueryFilterModel result)
-    {
-        result = new(null, null, null, null, null, null, null, null);
-        return true;
-    }
-}
 public record ProductStockUpdateModel(decimal? Quantity, decimal? MinimumQuantity, decimal? MaximumQuantity); 

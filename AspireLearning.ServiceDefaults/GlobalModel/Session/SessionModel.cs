@@ -25,7 +25,7 @@ public class SessionModel
     public bool IsExpired => DateTime.UtcNow > ExpiresAt;
 
     [JsonIgnore]
-    public LanguageEnum Language { get; set; }
+    public Language Language { get; set; }
 }
 
 public class UserSessionModel

@@ -1,5 +1,4 @@
 using AspireLearning.ServiceDefaults.GlobalConstant;
-using Microsoft.AspNetCore.Authorization;
 
 namespace AspireLearning.Api.Endpoints;
 
@@ -14,7 +13,7 @@ public static class ProductEndpoints
 {
     public static void MapProductEndpoints(this WebApplication app)
     {
-        app.MapPost("/product", [Authorize(Policy = Permissions.Product.Add)]
+        app.MapPost("/product",
             async (
             [FromBody] ProductCreateModel model,
             [FromServices] Context context,
@@ -36,41 +35,48 @@ public static class ProductEndpoints
 
             return Results.Created($"/product", null);
         })
-        .WithTags("ProductOperations")
+        .WithTags(EndpointConstants.ProductOperations)
         .WithDescription("Create a new product")
+        .RequireAuthorization(Permissions.Product.Add)
         .Produces(StatusCodes.Status201Created)
         .Produces(StatusCodes.Status401Unauthorized)
         .Produces(StatusCodes.Status403Forbidden);
 
-        app.MapGet("/product", [Authorize(Policy = Permissions.Product.Read)]
+        app.MapGet("/product",
             async (
-            [FromQuery] ProductQueryFilterModel query,
             [FromServices] Context context,
-            [FromServices] SessionModel session) =>
+            [FromServices] SessionModel session,
+            [FromQuery] string? searchName,
+            [FromQuery] string? searchBarcode,
+            [FromQuery] string? searchSku,
+            [FromQuery] string? sortBy,
+            [FromQuery] string? sortDirection,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10) =>
         {
             var products = context.Products
                 .Where(p => p.TenantId == session.TenantId);
 
-            if (!string.IsNullOrEmpty(query.SearchName))
-                products = products.Where(p => p.Name.Contains(query.SearchName));
+            if (!string.IsNullOrEmpty(searchName))
+                products = products.Where(p => p.Name.Contains(searchName));
 
-            if (!string.IsNullOrEmpty(query.SearchBarcode))
-                products = products.Where(p => p.Barcode == query.SearchBarcode);
+            if (!string.IsNullOrEmpty(searchBarcode))
+                products = products.Where(p => p.Barcode == searchBarcode);
 
-            if (!string.IsNullOrEmpty(query.SearchSKU))
-                products = products.Where(p => p.SKU == query.SearchSKU);
+            if (!string.IsNullOrEmpty(searchSku))
+                products = products.Where(p => p.SKU == searchSku);
 
-            products = query.SortBy?.ToLower() switch
+            products = sortBy?.ToLower() switch
             {
-                "name" when query.SortDirection == "desc" => products.OrderByDescending(p => p.Name),
+                "name" when sortDirection == "desc" => products.OrderByDescending(p => p.Name),
                 "name" => products.OrderBy(p => p.Name),
-                "price" when query.SortDirection == "desc" => products.OrderByDescending(p => p.UnitPrice),
+                "price" when sortDirection == "desc" => products.OrderByDescending(p => p.UnitPrice),
                 "price" => products.OrderBy(p => p.UnitPrice),
                 _ => products.OrderBy(p => p.Name)
             };
 
             var totalCount = await products.CountAsync();
-            var paginatedQuery = products.Skip((int)((query.PageNumber - 1) * query.PageSize)!).Take((int)query.PageSize!);
+            var paginatedQuery = products.Skip(((pageNumber - 1) * pageSize)!).Take(pageSize);
 
             var queryResult = await paginatedQuery.Select(x => new ProductViewModel
             (
@@ -86,20 +92,21 @@ public static class ProductEndpoints
             var result = new PaginatedResult<ProductViewModel>
             {
                 TotalCount = totalCount,
-                PageNumber = (int)query.PageNumber!,
-                PageSize = (int)query.PageSize!,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
                 Data = queryResult
             };
 
             return Results.Ok(result);
         })
-        .WithTags("ProductOperations")
+        .WithTags(EndpointConstants.ProductOperations)
         .WithDescription("Get all products with pagination")
+        .RequireAuthorization(Permissions.Product.Read)
         .Produces<PaginatedResult<ProductViewModel>>(200, "application/json")
         .Produces(StatusCodes.Status401Unauthorized)
         .Produces(StatusCodes.Status403Forbidden);
 
-        app.MapPatch("/product/{id}", [Authorize(Policy = Permissions.Product.Update)]
+        app.MapPatch("/product/{id:guid}",
             async (
             Guid id,
             [FromBody] ProductUpdateModel model,
@@ -124,14 +131,15 @@ public static class ProductEndpoints
             await context.SaveChangesAsync();
             return Results.Ok();
         })
-        .WithTags("ProductOperations")
+        .WithTags(EndpointConstants.ProductOperations)
         .WithDescription("Update product")
+        .RequireAuthorization(Permissions.Product.Update)
         .Produces(200)
         .Produces(404)
         .Produces(StatusCodes.Status401Unauthorized)
         .Produces(StatusCodes.Status403Forbidden);
 
-        app.MapDelete("/product/{id}", [Authorize(Policy = Permissions.Product.Delete)]
+        app.MapDelete("/product/{id:guid}", 
             async (
             Guid id,
             [FromServices] Context context,
@@ -150,8 +158,9 @@ public static class ProductEndpoints
             await context.SaveChangesAsync();
             return Results.Ok();
         })
-        .WithTags("ProductOperations")
+        .WithTags(EndpointConstants.ProductOperations)
         .WithDescription("Delete product")
+        .RequireAuthorization(Permissions.Product.Delete)
         .Produces(200)
         .Produces(404)
         .Produces(StatusCodes.Status401Unauthorized)
@@ -161,13 +170,4 @@ public static class ProductEndpoints
 
 public record ProductCreateModel(string Name, string? Description, string? Barcode, string? SKU, decimal UnitPrice, string? Unit);
 public record ProductViewModel(Guid Id, string Name, string? Description, string? Barcode, string? SKU, decimal UnitPrice, string? Unit);
-public record ProductQueryFilterModel(string? SearchName, string? SearchBarcode, string? SearchSKU, string? SortBy, string? SortDirection, int? PageNumber, int? PageSize) : IParsable<ProductQueryFilterModel>
-{
-    public static ProductQueryFilterModel Parse(string s, IFormatProvider? provider) => new(null, null, null, null, null, null, null);
-    public static bool TryParse(string? s, IFormatProvider? provider, out ProductQueryFilterModel result)
-    {
-        result = new(null, null, null, null, null, null, null);
-        return true;
-    }
-}
 public record ProductUpdateModel(string? Name, string? Description, string? Barcode, string? SKU, decimal? UnitPrice, string? Unit); 

@@ -21,7 +21,7 @@ public class CountryText
     
     public Guid CountryId { get; set; }
     
-    public LanguageEnum Language { get; set; }
+    public Language Language { get; set; }
     
     public string Name { get; set; } = null!;
     
@@ -95,7 +95,7 @@ public class CountryTextSeeder : IEntitySeeder
             {
                 Id = CountryConstants.USA.Texts.TR.Id,
                 CountryId = CountryConstants.USA.Id,
-                Language = LanguageEnum.TR,
+                Language = Language.TR,
                 Code = CountryConstants.USA.Texts.TR.Code,
                 Name = CountryConstants.USA.Texts.TR.Name
             },
@@ -103,7 +103,7 @@ public class CountryTextSeeder : IEntitySeeder
             {   
                 Id = CountryConstants.USA.Texts.EN.Id,
                 CountryId = CountryConstants.USA.Id,
-                Language = LanguageEnum.EN,
+                Language = Language.EN,
                 Code = CountryConstants.USA.Texts.EN.Code,
                 Name = CountryConstants.USA.Texts.EN.Name
             },
@@ -111,7 +111,7 @@ public class CountryTextSeeder : IEntitySeeder
             {
                 Id = CountryConstants.Turkey.Texts.TR.Id,
                 CountryId = CountryConstants.Turkey.Id,
-                Language = LanguageEnum.TR,
+                Language = Language.TR,
                 Code = CountryConstants.Turkey.Texts.TR.Code,
                 Name = CountryConstants.Turkey.Texts.TR.Name
             },
@@ -119,7 +119,7 @@ public class CountryTextSeeder : IEntitySeeder
             {
                 Id = CountryConstants.Turkey.Texts.EN.Id,
                 CountryId = CountryConstants.Turkey.Id,
-                Language = LanguageEnum.EN,
+                Language = Language.EN,
                 Code = CountryConstants.Turkey.Texts.EN.Code,
                 Name = CountryConstants.Turkey.Texts.EN.Name
             }

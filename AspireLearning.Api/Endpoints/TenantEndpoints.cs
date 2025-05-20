@@ -1,5 +1,6 @@
 ﻿using AspireLearning.Api.Data.Context;
 using AspireLearning.Api.Data.Entity;
+using AspireLearning.ServiceDefaults.GlobalConstant;
 using AspireLearning.ServiceDefaults.GlobalModel.Session;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +13,7 @@ public static class TenantEndpoints
     public static void MapTenantEndpoints(this WebApplication app)
     {
         // Tüm tenant'ları getir - Sadece SuperAdmin
-        app.MapGet("tenants", [Authorize(Policy = "SuperAdmin")]
+        app.MapGet("tenants", 
                 async (
                 [FromServices] Context context,
                 [FromServices] SessionModel session) =>
@@ -28,7 +29,7 @@ public static class TenantEndpoints
                             t.ContactPhone,
                             t.CreatedAt,
                             t.IsActive,
-                            t.Domains.Where(d => !d.IsDeleted)
+                            t.Domains!.Where(d => !d.IsDeleted)
                                 .Select(d => new TenantDomainViewModel(
                                     d.Id,
                                     d.Domain,
@@ -39,8 +40,9 @@ public static class TenantEndpoints
 
                     return Results.Ok(tenants);
                 })
-            .WithTags("TenantOperations")
+            .WithTags(EndpointConstants.TenantOperations)
             .WithDescription("Get all tenants (SuperAdmin only)")
+            .RequireAuthorization("SuperAdmin")
             .Produces<List<TenantViewModel>>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status403Forbidden);
@@ -79,7 +81,7 @@ public static class TenantEndpoints
                             t.ContactPhone,
                             t.CreatedAt,
                             t.IsActive,
-                            t.Domains.Where(d => !d.IsDeleted)
+                            t.Domains!.Where(d => !d.IsDeleted)
                                 .Select(d => new TenantDomainViewModel(
                                     d.Id,
                                     d.Domain,
@@ -90,7 +92,7 @@ public static class TenantEndpoints
 
                     return tenant != null ? Results.Ok(tenant) : Results.NotFound();
                 })
-            .WithTags("TenantOperations")
+            .WithTags(EndpointConstants.TenantOperations)
             .WithDescription("Get tenant by ID (SuperAdmin: any tenant, TenantAdmin: own tenant only)")
             .Produces<TenantViewModel>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound)
@@ -98,7 +100,7 @@ public static class TenantEndpoints
             .Produces(StatusCodes.Status403Forbidden);
         
         // Yeni tenant oluştur - Sadece SuperAdmin
-        app.MapPost("tenants", [Authorize(Policy = "SuperAdmin")]
+        app.MapPost("tenants", 
                 async (
                 [FromBody] TenantCreateModel model,
                 [FromServices] Context context,
@@ -136,8 +138,9 @@ public static class TenantEndpoints
                     
                     return Results.Created($"/tenants/{tenant.Id}", new { id = tenant.Id });
                 })
-            .WithTags("TenantOperations")
+            .WithTags(EndpointConstants.TenantOperations)
             .WithDescription("Create a new tenant (SuperAdmin only)")
+            .RequireAuthorization("SuperAdmin")
             .Produces<object>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status403Forbidden);
@@ -169,24 +172,16 @@ public static class TenantEndpoints
                     
                     // Sadece verilen alanları güncelle
                     if (!string.IsNullOrWhiteSpace(model.Name))
-                    {
                         tenant.Name = model.Name;
-                    }
                     
                     if (!string.IsNullOrWhiteSpace(model.ContactName))
-                    {
                         tenant.ContactName = model.ContactName;
-                    }
                     
                     if (!string.IsNullOrWhiteSpace(model.ContactEmail))
-                    {
                         tenant.ContactEmail = model.ContactEmail;
-                    }
                     
                     if (!string.IsNullOrWhiteSpace(model.ContactPhone))
-                    {
                         tenant.ContactPhone = model.ContactPhone;
-                    }
                     
                     tenant.ModifiedAt = DateTime.UtcNow;
                     tenant.ModifiedBy = Guid.Parse(session.UserId);
@@ -195,7 +190,7 @@ public static class TenantEndpoints
                     
                     return Results.Ok();
                 })
-            .WithTags("TenantOperations")
+            .WithTags(EndpointConstants.TenantOperations)
             .WithDescription("Update a tenant (SuperAdmin: any tenant, TenantAdmin: own tenant only)")
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound)
@@ -203,21 +198,20 @@ public static class TenantEndpoints
             .Produces(StatusCodes.Status403Forbidden);
         
         // Tenant sil - Sadece SuperAdmin
-        app.MapDelete("tenants/{id}", [Authorize(Policy = "SuperAdmin")]
+        app.MapDelete("tenants/{id}", 
                 async (
                 [FromRoute] Guid id,
                 [FromServices] Context context,
                 [FromServices] SessionModel session) =>
                 {
-                    // Tenant silme - sadece SuperAdmin yapabilir
                     var tenant = await context.Tenants.FindAsync(id);
                     
                     if (tenant == null || tenant.IsDeleted)
-                    {
                         return Results.NotFound();
-                    }
                     
+                    // Silme işlemi (soft delete)
                     tenant.IsDeleted = true;
+                    tenant.IsActive = false;
                     tenant.RemovedAt = DateTime.UtcNow;
                     tenant.RemovedBy = Guid.Parse(session.UserId);
                     
@@ -225,21 +219,27 @@ public static class TenantEndpoints
                     
                     return Results.Ok();
                 })
-            .WithTags("TenantOperations")
+            .WithTags(EndpointConstants.TenantOperations)
             .WithDescription("Delete a tenant (SuperAdmin only)")
+            .RequireAuthorization("SuperAdmin")
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status403Forbidden);
         
         // Tenant'a domain ekle - Sadece SuperAdmin
-        app.MapPost("tenant-domains", [Authorize(Policy = "SuperAdmin")]
+        app.MapPost("tenant-domains", 
                 async (
                 [FromBody] TenantDomainCreateModel model,
                 [FromServices] Context context,
                 [FromServices] SessionModel session) =>
                 {
-                    // Sadece SuperAdmin yapabilir
+                    var tenant = await context.Tenants.FindAsync(model.TenantId);
+                    
+                    if (tenant == null || tenant.IsDeleted)
+                        return Results.NotFound("Tenant.NotFound");
+                    
+                    // Domain ekle
                     var domain = new TenantDomain
                     {
                         Id = Guid.NewGuid(),
@@ -255,28 +255,29 @@ public static class TenantEndpoints
                     
                     return Results.Created($"/tenant-domains/{domain.Id}", new { id = domain.Id });
                 })
-            .WithTags("TenantOperations")
+            .WithTags(EndpointConstants.TenantOperations)
             .WithDescription("Add a domain to a tenant (SuperAdmin only)")
+            .RequireAuthorization("SuperAdmin")
             .Produces<object>(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status403Forbidden);
         
         // Tenant domain sil - Sadece SuperAdmin
-        app.MapDelete("tenant-domains/{id}", [Authorize(Policy = "SuperAdmin")]
+        app.MapDelete("tenant-domains/{id}", 
                 async (
                 [FromRoute] Guid id,
                 [FromServices] Context context,
                 [FromServices] SessionModel session) =>
                 {
-                    // Sadece SuperAdmin yapabilir
                     var domain = await context.TenantDomains.FindAsync(id);
                     
                     if (domain == null || domain.IsDeleted)
-                    {
                         return Results.NotFound();
-                    }
                     
+                    // Silme işlemi (soft delete)
                     domain.IsDeleted = true;
+                    domain.IsActive = false;
                     domain.RemovedAt = DateTime.UtcNow;
                     domain.RemovedBy = Guid.Parse(session.UserId);
                     
@@ -284,8 +285,9 @@ public static class TenantEndpoints
                     
                     return Results.Ok();
                 })
-            .WithTags("TenantOperations")
+            .WithTags(EndpointConstants.TenantOperations)
             .WithDescription("Delete a tenant domain (SuperAdmin only)")
+            .RequireAuthorization("SuperAdmin")
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized)

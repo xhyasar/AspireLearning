@@ -76,10 +76,10 @@ public static class Extensions {
             var context = httpContextAccessor.HttpContext;
             return context?.Items[nameof(SessionModel)] as SessionModel ?? new SessionModel
             {
-                Id = default,
-                UserId = default,
-                Token = default,
-                User = default,
+                Id = string.Empty,
+                UserId = string.Empty,
+                Token = string.Empty,
+                User = new(),
                 TenantId = default,
                 CreatedAt = default,
                 Language = 0

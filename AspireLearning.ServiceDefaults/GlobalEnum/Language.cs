@@ -1,6 +1,6 @@
 namespace AspireLearning.ServiceDefaults.GlobalEnum;
 
-public enum LanguageEnum
+public enum Language
 {
     // ReSharper disable InconsistentNaming
     TR = 1,

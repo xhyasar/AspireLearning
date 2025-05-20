@@ -46,7 +46,7 @@ public class RoleClaimSeeder : IEntitySeeder
                 {
                     Id = claimId++,
                     RoleId = superAdminRoleId,
-                    ClaimType = "Permission",
+                    ClaimType = Permissions.ClaimType,
                     ClaimValue = permission
                 }
             );
@@ -62,9 +62,9 @@ public class RoleClaimSeeder : IEntitySeeder
                 {
                     Id = claimId++,
                     RoleId = tenantAdminRoleId,
-                    ClaimType = "Permission",
+                    ClaimType = Permissions.ClaimType,
                     ClaimValue = permission,
-                    TenantId = TenantConstants.Id // İlk tenant için
+                    TenantId = TenantConstants.Id
                 }
             );
         }

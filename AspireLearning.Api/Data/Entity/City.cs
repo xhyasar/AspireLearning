@@ -23,7 +23,7 @@ public class CityText
     
     public Guid CityId { get; set; }
     
-    public LanguageEnum Language { get; set; }
+    public Language Language { get; set; }
     
     public string Name { get; set; } = null!;
     
@@ -97,28 +97,28 @@ public class CityTextSeeder : IEntitySeeder
             {
                 Id = CityConstants.Istanbul.Texts.TR.Id,
                 CityId = CityConstants.Istanbul.Id,
-                Language = LanguageEnum.TR,
+                Language = Language.TR,
                 Name = CityConstants.Istanbul.Texts.TR.Name
             },
             new()
             {   
                 Id = CityConstants.Istanbul.Texts.EN.Id,
                 CityId = CityConstants.Istanbul.Id,
-                Language = LanguageEnum.EN,
+                Language = Language.EN,
                 Name = CityConstants.Istanbul.Texts.EN.Name
             },
             new()
             {
                 Id = CityConstants.LosAngeles.Texts.TR.Id,
                 CityId = CityConstants.LosAngeles.Id,
-                Language = LanguageEnum.TR,
+                Language = Language.TR,
                 Name = CityConstants.LosAngeles.Texts.TR.Name
             },
             new()
             {
                 Id = CityConstants.LosAngeles.Texts.EN.Id,
                 CityId = CityConstants.LosAngeles.Id,
-                Language = LanguageEnum.EN,
+                Language = Language.EN,
                 Name = CityConstants.LosAngeles.Texts.EN.Name
             }
         };

@@ -4,6 +4,7 @@ using Data.Context;
 using Data.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ServiceDefaults.GlobalConstant;
 using ServiceDefaults.GlobalModel.Session;
 using ServiceDefaults.GlobalUtility;
 
@@ -40,31 +41,36 @@ public static class WarehouseEndpoints {
 
                 return Results.Created($"/warehouse", null);
             })
-            .WithTags("WarehouseOperations")
+            .WithTags(EndpointConstants.WarehouseOperations)
             .WithDescription("Create a new warehouse")
+            .RequireAuthorization(Permissions.Warehouse.Add)
             .Produces(StatusCodes.Status201Created);
 
         app.MapGet("/warehouse", async (
-                [FromQuery]WarehouseQueryFilterModel query,
                 [FromServices]Context context,
-                [FromServices]SessionModel session, HttpContext httpContext) => {
+                [FromServices]SessionModel session,
+                [FromQuery] string? searchName,
+                [FromQuery] string? sortBy,
+                [FromQuery] string? sortDirection,
+                [FromQuery] int pageNumber = 1,
+                [FromQuery] int pageSize = 10) => {
                 var warehouses = context.Warehouses
                     .Where(w => w.TenantId == session.TenantId);
 
-                if (!string.IsNullOrEmpty(query.SearchName))
-                    warehouses = warehouses.Where(w => w.Name.Contains(query.SearchName));
+                if (!string.IsNullOrEmpty(searchName))
+                    warehouses = warehouses.Where(w => w.Name.Contains(searchName));
 
-                warehouses = query.SortBy?.ToLower() switch
+                warehouses = sortBy?.ToLower() switch
                 {
-                    "name" when query.SortDirection == "desc" => warehouses.OrderByDescending(w => w.Name),
+                    "name" when sortDirection == "desc" => warehouses.OrderByDescending(w => w.Name),
                     "name" => warehouses.OrderBy(w => w.Name),
-                    "lastactivity" when query.SortDirection == "desc" => warehouses.OrderByDescending(w => w.LastActivity),
+                    "lastactivity" when sortDirection == "desc" => warehouses.OrderByDescending(w => w.LastActivity),
                     "lastactivity" => warehouses.OrderBy(w => w.LastActivity),
                     _ => warehouses.OrderBy(w => w.Name)
                 };
 
                 var totalCount = await warehouses.CountAsync();
-                var paginatedQuery = warehouses.Skip((int)((query.PageNumber - 1) * query.PageSize)!).Take((int)query.PageSize!);
+                var paginatedQuery = warehouses.Skip(((pageNumber - 1) * pageSize)!).Take(pageSize);
 
                 var queryResult = await paginatedQuery.Select(x => new WarehouseViewModel
                 (
@@ -78,13 +84,14 @@ public static class WarehouseEndpoints {
 
                 var result = new PaginatedResult<WarehouseViewModel>
                 {
-                    TotalCount = totalCount, PageNumber = (int)query.PageNumber!, PageSize = (int)query.PageSize, Data = queryResult
+                    TotalCount = totalCount, PageNumber = pageNumber!, PageSize = pageSize, Data = queryResult
                 };
               
                 return Results.Ok(result);
             })
-            .WithTags("WarehouseOperations")
+            .WithTags(EndpointConstants.WarehouseOperations)
             .WithDescription("Get all warehouses with pagination")
+            .RequireAuthorization(Permissions.Warehouse.Read)
             .Produces<PaginatedResult<WarehouseViewModel>>(200, "application/json")
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status400BadRequest)
@@ -111,8 +118,9 @@ public static class WarehouseEndpoints {
             await context.SaveChangesAsync();
             return Results.Ok();
         })
-        .WithTags("WarehouseOperations")
+        .WithTags(EndpointConstants.WarehouseOperations)
         .WithDescription("Update warehouse address and map URL")
+        .RequireAuthorization(Permissions.Warehouse.Update)
         .Produces(200)
         .Produces(404);
 
@@ -147,8 +155,9 @@ public static class WarehouseEndpoints {
             await context.SaveChangesAsync();
             return Results.Ok();
         })
-        .WithTags("WarehouseOperations")
+        .WithTags(EndpointConstants.WarehouseOperations)
         .WithDescription("Update warehouse city and country")
+        .RequireAuthorization(Permissions.Warehouse.Update)
         .Produces(200)
         .Produces(404)
         .Produces(400);
@@ -173,8 +182,9 @@ public static class WarehouseEndpoints {
             await context.SaveChangesAsync();
             return Results.Ok();
         })
-        .WithTags("WarehouseOperations")
+        .WithTags(EndpointConstants.WarehouseOperations)
         .WithDescription("Update warehouse name")
+        .RequireAuthorization(Permissions.Warehouse.Update)
         .Produces(200)
         .Produces(404);
 
@@ -198,8 +208,9 @@ public static class WarehouseEndpoints {
             await context.SaveChangesAsync();
             return Results.Ok();
         })
-        .WithTags("WarehouseOperations")
+        .WithTags(EndpointConstants.WarehouseOperations)
         .WithDescription("Update warehouse status")
+        .RequireAuthorization(Permissions.Warehouse.Update)
         .Produces(200)
         .Produces(404);
 
@@ -230,8 +241,9 @@ public static class WarehouseEndpoints {
             await context.SaveChangesAsync();
             return Results.Ok();
         })
-        .WithTags("WarehouseOperations")
+        .WithTags(EndpointConstants.WarehouseOperations)
         .WithDescription("Update warehouse person in charge")
+        .RequireAuthorization(Permissions.Warehouse.Update)
         .Produces(200)
         .Produces(404)
         .Produces(400);
@@ -240,15 +252,7 @@ public static class WarehouseEndpoints {
 
 public record WarehouseCreateModel(string Name, Guid PersonInChargeId, Guid City, Guid Country, string? MapUrl, string Address, Guid CategoryId);
 public record WarehouseViewModel(Guid Id, string Name, string City, string Country, DateTime LastActivity, string CategoryName);
-public record WarehouseQueryFilterModel(string? SearchName, string? SortBy, string? SortDirection, int? PageNumber, int? PageSize) : IParsable<WarehouseQueryFilterModel>
-{
-    public static WarehouseQueryFilterModel Parse(string s, IFormatProvider? provider) => new(null, null, null, null, null);
-    public static bool TryParse(string? s, IFormatProvider? provider, out WarehouseQueryFilterModel result)
-    {
-        result = new(null, null, null, null, null);
-        return true;
-    }
-}
+
 // Update modelleri
 public record WarehouseAddressUpdateModel(string Address, string? MapUrl);
 public record WarehouseLocationUpdateModel(Guid CityId, Guid CountryId);

@@ -4,6 +4,7 @@ using Data.Context;
 using Data.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ServiceDefaults.GlobalConstant;
 using ServiceDefaults.GlobalModel.Session;
 using ServiceDefaults.GlobalUtility;
 
@@ -18,7 +19,7 @@ public static class StockTransactionEndpoints
         {
             var productStock = await context.ProductStocks
                 .Include(ps => ps.Product)
-                .FirstOrDefaultAsync(ps => ps.Id == model.ProductStockId && ps.Product.TenantId == session.TenantId);
+                .FirstOrDefaultAsync(ps => ps.Id == model.ProductStockId && ps.Product != null && ps.Product.TenantId == session.TenantId);
 
             if (productStock == null)
                 return Results.BadRequest("ProductStock.NotFound");
@@ -48,48 +49,57 @@ public static class StockTransactionEndpoints
 
             return Results.Created($"/stock-transaction/{transaction.Id}", null);
         })
+        .WithTags(EndpointConstants.StockTransactionOperations)
         .WithDescription("Create a new stock transaction")
+        .RequireAuthorization(Permissions.Stock.Add)
         .Produces(StatusCodes.Status201Created)
         .Produces(StatusCodes.Status400BadRequest);
 
         app.MapGet("/stock-transaction", async (
-            [FromQuery] StockTransactionQueryFilterModel query,
             [FromServices] Context context,
-            [FromServices] SessionModel session) =>
+            [FromServices] SessionModel session,
+            [FromQuery] Guid? productStockId,
+            [FromQuery] TransactionType? type,
+            [FromQuery] DateTime? startDate,
+            [FromQuery] DateTime? endDate,
+            [FromQuery] string? sortBy,
+            [FromQuery] string? sortDirection,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10) =>
         {
             var transactions = context.StockTransactions
                 .Include(st => st.ProductStock)
-                .ThenInclude(ps => ps.Product)
-                .Where(st => st.ProductStock.Product.TenantId == session.TenantId);
+                .ThenInclude(ps => ps!.Product)
+                .Where(st => st.ProductStock != null && st.ProductStock.Product != null && st.ProductStock.Product.TenantId == session.TenantId);
 
-            if (query.ProductStockId.HasValue)
-                transactions = transactions.Where(st => st.ProductStockId == query.ProductStockId);
+            if (productStockId.HasValue)
+                transactions = transactions.Where(st => st.ProductStockId == productStockId);
 
-            if (query.Type.HasValue)
-                transactions = transactions.Where(st => st.Type == query.Type);
+            if (type.HasValue)
+                transactions = transactions.Where(st => st.Type == type);
 
-            if (query.StartDate.HasValue)
-                transactions = transactions.Where(st => st.CreatedAt >= query.StartDate);
+            if (startDate.HasValue)
+                transactions = transactions.Where(st => st.CreatedAt >= startDate);
 
-            if (query.EndDate.HasValue)
-                transactions = transactions.Where(st => st.CreatedAt <= query.EndDate);
+            if (endDate.HasValue)
+                transactions = transactions.Where(st => st.CreatedAt <= endDate);
 
-            transactions = query.SortBy?.ToLower() switch
+            transactions = sortBy?.ToLower() switch
             {
-                "date" when query.SortDirection == "desc" => transactions.OrderByDescending(st => st.CreatedAt),
+                "date" when sortDirection == "desc" => transactions.OrderByDescending(st => st.CreatedAt),
                 "date" => transactions.OrderBy(st => st.CreatedAt),
-                "quantity" when query.SortDirection == "desc" => transactions.OrderByDescending(st => st.Quantity),
+                "quantity" when sortDirection == "desc" => transactions.OrderByDescending(st => st.Quantity),
                 "quantity" => transactions.OrderBy(st => st.Quantity),
                 _ => transactions.OrderByDescending(st => st.CreatedAt)
             };
 
             var totalCount = await transactions.CountAsync();
-            var paginatedQuery = transactions.Skip((int)((query.PageNumber - 1) * query.PageSize)!).Take((int)query.PageSize!);
+            var paginatedQuery = transactions.Skip((pageNumber - 1) * pageSize).Take(pageSize);
 
             var queryResult = await paginatedQuery.Select(x => new StockTransactionViewModel
             (
                 x.Id,
-                x.ProductStock.Product.Name,
+                x.ProductStock != null && x.ProductStock.Product != null ? x.ProductStock.Product.Name : "Unknown Product",
                 x.Type,
                 x.Quantity,
                 x.PreviousQuantity,
@@ -102,14 +112,16 @@ public static class StockTransactionEndpoints
             var result = new PaginatedResult<StockTransactionViewModel>
             {
                 TotalCount = totalCount,
-                PageNumber = (int)query.PageNumber!,
-                PageSize = (int)query.PageSize!,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
                 Data = queryResult
             };
 
             return Results.Ok(result);
         })
+        .WithTags(EndpointConstants.StockTransactionOperations)
         .WithDescription("Get all stock transactions with pagination")
+        .RequireAuthorization(Permissions.Stock.Read)
         .Produces<PaginatedResult<StockTransactionViewModel>>(200, "application/json");
 
         app.MapGet("/stock-transaction/{id}", async (
@@ -119,8 +131,8 @@ public static class StockTransactionEndpoints
         {
             var transaction = await context.StockTransactions
                 .Include(st => st.ProductStock)
-                .ThenInclude(ps => ps.Product)
-                .FirstOrDefaultAsync(st => st.Id == id && st.ProductStock.Product.TenantId == session.TenantId);
+                .ThenInclude(ps => ps!.Product)
+                .FirstOrDefaultAsync(st => st.Id == id && st.ProductStock != null && st.ProductStock.Product != null && st.ProductStock.Product.TenantId == session.TenantId);
 
             if (transaction == null)
                 return Results.NotFound("StockTransaction.NotFound");
@@ -128,7 +140,7 @@ public static class StockTransactionEndpoints
             var result = new StockTransactionViewModel
             (
                 transaction.Id,
-                transaction.ProductStock.Product.Name,
+                transaction.ProductStock != null && transaction.ProductStock.Product != null ? transaction.ProductStock.Product.Name : "Unknown Product",
                 transaction.Type,
                 transaction.Quantity,
                 transaction.PreviousQuantity,
@@ -140,7 +152,9 @@ public static class StockTransactionEndpoints
 
             return Results.Ok(result);
         })
+        .WithTags(EndpointConstants.StockTransactionOperations)
         .WithDescription("Get stock transaction by id")
+        .RequireAuthorization(Permissions.Stock.Read)
         .Produces<StockTransactionViewModel>(200, "application/json")
         .Produces(404);
     }
@@ -162,22 +176,4 @@ public record StockTransactionViewModel(
     decimal NewQuantity,
     string? Description,
     string? ReferenceNumber,
-    DateTime CreatedAt);
-
-public record StockTransactionQueryFilterModel(
-    Guid? ProductStockId,
-    TransactionType? Type,
-    DateTime? StartDate,
-    DateTime? EndDate,
-    string? SortBy,
-    string? SortDirection,
-    int? PageNumber,
-    int? PageSize) : IParsable<StockTransactionQueryFilterModel>
-{
-    public static StockTransactionQueryFilterModel Parse(string s, IFormatProvider? provider) => new(null, null, null, null, null, null, null, null);
-    public static bool TryParse(string? s, IFormatProvider? provider, out StockTransactionQueryFilterModel result)
-    {
-        result = new(null, null, null, null, null, null, null, null);
-        return true;
-    }
-} 
+    DateTime CreatedAt); 

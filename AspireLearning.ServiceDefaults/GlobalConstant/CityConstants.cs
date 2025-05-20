@@ -4,20 +4,20 @@ public static class CityConstants
 {
     public static class Istanbul
     {
-        public readonly static Guid Id = new("895f23d9-fb86-4846-b745-6b20d0eaa7ea");
-        public readonly static Guid CountryId = CountryConstants.Turkey.Id;
+        public static readonly Guid Id = new("895f23d9-fb86-4846-b745-6b20d0eaa7ea");
+        public static readonly Guid CountryId = CountryConstants.Turkey.Id;
         
         public static class Texts
         {
             public static class TR
             {
-                public readonly static Guid Id = new("0bcb1039-21bc-44ec-b12b-db7280404220");
+                public static readonly Guid Id = new("0bcb1039-21bc-44ec-b12b-db7280404220");
                 public const string Name = "İstanbul";
             }
             
             public static class EN
             {
-                public readonly static Guid Id = new("6bd15218-6055-4310-b0c6-7bd807cd2c8f");
+                public static readonly Guid Id = new("6bd15218-6055-4310-b0c6-7bd807cd2c8f");
                 public const string Name = "Istanbul";
             }
         }

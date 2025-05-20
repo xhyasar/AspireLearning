@@ -62,7 +62,7 @@ public static class UserEndpoints {
                 
                 return Results.Created($"/user/{user.Id}", null);
             })
-            .WithTags("UserOperations")
+            .WithTags(EndpointConstants.UserManagementOperations)
             .WithDescription("Create a new user")
             .RequireAuthorization(Permissions.UserManagement.Add)
             .Produces(StatusCodes.Status201Created)
@@ -90,38 +90,40 @@ public static class UserEndpoints {
 
                 return Results.Ok(userViewModel);
             })
-            .WithTags("UserOperations")
+            .WithTags(EndpointConstants.UserOperations)
             .WithDescription("Get current user details")
             .Produces<UserViewModel>(StatusCodes.Status200OK, "application/json")
             .Produces(StatusCodes.Status404NotFound);
         
         app.MapGet("user/all", async (
-                [FromQuery]UserQueryFilterModel query,
                 [FromServices] UserService service,
-                [FromServices] SessionModel session) => {
+                [FromServices] SessionModel session,
+                [FromQuery] string? searchTerm,
+                [FromQuery] string? sortBy,
+                [FromQuery] string? sortDirection,
+                [FromQuery] int pageNumber = 1,
+                [FromQuery] int pageSize = 10) => {
                 var usersQuery = service.Users
                     .Where(u => u.TenantId == session.TenantId);
 
-                if (!string.IsNullOrEmpty(query.SearchTerm))
+                if (!string.IsNullOrEmpty(searchTerm))
                 {
                     usersQuery = usersQuery.Where(u => 
-                        u.FirstName.Contains(query.SearchTerm) || 
-                        u.LastName.Contains(query.SearchTerm) || 
-                        u.Email!.Contains(query.SearchTerm));
+                        u.FirstName.Contains(searchTerm) || 
+                        u.LastName.Contains(searchTerm) || 
+                        u.Email!.Contains(searchTerm));
                 }
 
-                usersQuery = query.SortBy?.ToLower() switch
+                usersQuery = sortBy?.ToLower() switch
                 {
-                    "name" when query.SortDirection == "desc" => usersQuery.OrderByDescending(u => u.LastName).ThenByDescending(u => u.FirstName),
+                    "name" when sortDirection == "desc" => usersQuery.OrderByDescending(u => u.LastName).ThenByDescending(u => u.FirstName),
                     "name" => usersQuery.OrderBy(u => u.LastName).ThenBy(u => u.FirstName),
-                    "email" when query.SortDirection == "desc" => usersQuery.OrderByDescending(u => u.Email),
+                    "email" when sortDirection == "desc" => usersQuery.OrderByDescending(u => u.Email),
                     "email" => usersQuery.OrderBy(u => u.Email),
                     _ => usersQuery.OrderBy(u => u.LastName).ThenBy(u => u.FirstName)
                 };
 
                 var totalCount = await usersQuery.CountAsync();
-                var pageNumber = query.PageNumber ?? 1;
-                var pageSize = query.PageSize ?? 10;
                 
                 var paginatedQuery = usersQuery
                     .Skip((pageNumber - 1) * pageSize)
@@ -159,16 +161,16 @@ public static class UserEndpoints {
 
                 return Results.Ok(result);
             })
-            .WithTags("UserOperations")
+            .WithTags(EndpointConstants.UserManagementOperations)
             .WithDescription("Get all users with pagination")
-            .RequireAuthorization(Permissions.UserManagement.Read)
+            .RequireAuthorization(Permissions.UserManagement.Read, Permissions.Warehouse.Add, Permissions.Warehouse.Update)
             .Produces<PaginatedResult<UserViewModel>>(StatusCodes.Status200OK, "application/json")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status403Forbidden);
 
         // Name update (FirstName, LastName)
-        app.MapPatch("user/{id}/name", async (
+        app.MapPatch("user/{id:guid}/name", async (
                 Guid id,
                 [FromBody] UserNameUpdateModel model,
                 [FromServices] UserService service,
@@ -190,7 +192,7 @@ public static class UserEndpoints {
                     ? Results.Ok() 
                     : Results.BadRequest(result.Errors);
             })
-            .WithTags("UserOperations")
+            .WithTags(EndpointConstants.UserManagementOperations)
             .WithDescription("Update user name")
             .RequireAuthorization(Permissions.UserManagement.Update)
             .Produces(StatusCodes.Status200OK)
@@ -229,7 +231,7 @@ public static class UserEndpoints {
                     ? Results.Ok() 
                     : Results.BadRequest(result.Errors);
             })
-            .WithTags("UserOperations")
+            .WithTags(EndpointConstants.UserManagementOperations)
             .WithDescription("Update user email")
             .RequireAuthorization(Permissions.UserManagement.Update)
             .Produces(StatusCodes.Status200OK)
@@ -260,7 +262,7 @@ public static class UserEndpoints {
                     ? Results.Ok() 
                     : Results.BadRequest(result.Errors);
             })
-            .WithTags("UserOperations")
+            .WithTags(EndpointConstants.UserManagementOperations)
             .WithDescription("Update user phone number")
             .RequireAuthorization(Permissions.UserManagement.Update)
             .Produces(StatusCodes.Status200OK)
@@ -291,7 +293,7 @@ public static class UserEndpoints {
                     ? Results.Ok() 
                     : Results.BadRequest(result.Errors);
             })
-            .WithTags("UserOperations")
+            .WithTags(EndpointConstants.UserManagementOperations)
             .WithDescription("Update user active status")
             .RequireAuthorization(Permissions.UserManagement.Update)
             .Produces(StatusCodes.Status200OK)
@@ -306,18 +308,6 @@ public static class UserEndpoints {
 public record UserCreateModel(string Email, string Password, string FirstName, string LastName, string? PhoneNumber, string[]? Roles);
 
 public record UserViewModel(Guid Id, string Email, string FirstName, string LastName, string? PhoneNumber, Guid TenantId, bool IsActive, string[] Roles);
-
-public record UserQueryFilterModel(string? SearchTerm, string? SortBy, string? SortDirection, int? PageNumber, int? PageSize) : IParsable<UserQueryFilterModel>
-{
-    public static UserQueryFilterModel Parse(string s, IFormatProvider? provider) => 
-        new(null, null, null, null, null);
-    
-    public static bool TryParse(string? s, IFormatProvider? provider, out UserQueryFilterModel result)
-    {
-        result = new(null, null, null, null, null);
-        return true;
-    }
-}
 
 // Update models
 public record UserNameUpdateModel(string FirstName, string LastName);

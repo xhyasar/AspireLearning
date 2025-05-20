@@ -18,7 +18,7 @@ builder.Services.AddProblemDetails();
 
 builder.AddSqlServerDbContext<Context>("al-dev-001");
 
-builder.Services.AddIdentity<User,Role>()
+builder.Services.AddIdentity<User, Role>()
     .AddEntityFrameworkStores<Context>()
     .AddUserManager<UserManager<User>>()
     .AddRoleManager<RoleManager<Role>>()
@@ -26,63 +26,42 @@ builder.Services.AddIdentity<User,Role>()
 
 builder.Services.AddRouting();
 
-// Claims dönüşümü için servis ekle
-builder.Services.AddScoped<IClaimsTransformation, ClaimsTransformation>();
-
 // Rol ve izin tabanlı yetkilendirme politikaları
-builder.Services.AddAuthorization(options =>
-{
-    // Rol tabanlı politikalar
-    options.AddPolicy("SuperAdmin", policy => policy.RequireRole(RoleConstants.SuperAdmin.Name));
-    options.AddPolicy("TenantAdmin", policy => policy.RequireRole(RoleConstants.TenantAdmin.Name));
-    options.AddPolicy("Admin", policy => policy.RequireRole(RoleConstants.Admin.Name));
-    
-    // İzin tabanlı politikalar - Ürün
-    options.AddPolicy(Permissions.Product.Read, policy => 
-        policy.RequireClaim("Permission", Permissions.Product.Read));
-    options.AddPolicy(Permissions.Product.Add, policy => 
-        policy.RequireClaim("Permission", Permissions.Product.Add));
-    options.AddPolicy(Permissions.Product.Update, policy => 
-        policy.RequireClaim("Permission", Permissions.Product.Update));
-    options.AddPolicy(Permissions.Product.Delete, policy => 
-        policy.RequireClaim("Permission", Permissions.Product.Delete));
-    
-    // İzin tabanlı politikalar - Depo
-    options.AddPolicy(Permissions.Warehouse.Read, policy => 
-        policy.RequireClaim("Permission", Permissions.Warehouse.Read));
-    options.AddPolicy(Permissions.Warehouse.Add, policy => 
-        policy.RequireClaim("Permission", Permissions.Warehouse.Add));
-    options.AddPolicy(Permissions.Warehouse.Update, policy => 
-        policy.RequireClaim("Permission", Permissions.Warehouse.Update));
-    options.AddPolicy(Permissions.Warehouse.Delete, policy => 
-        policy.RequireClaim("Permission", Permissions.Warehouse.Delete));
-    
-    // İzin tabanlı politikalar - Stok
-    options.AddPolicy(Permissions.Stock.Read, policy => 
-        policy.RequireClaim("Permission", Permissions.Stock.Read));
-    options.AddPolicy(Permissions.Stock.Add, policy => 
-        policy.RequireClaim("Permission", Permissions.Stock.Add));
-    options.AddPolicy(Permissions.Stock.Update, policy => 
-        policy.RequireClaim("Permission", Permissions.Stock.Update));
-    options.AddPolicy(Permissions.Stock.Delete, policy => 
-        policy.RequireClaim("Permission", Permissions.Stock.Delete));
-    
-    // İzin tabanlı politikalar - Kullanıcı Yönetimi
-    options.AddPolicy(Permissions.UserManagement.Read, policy => 
-        policy.RequireClaim("Permission", Permissions.UserManagement.Read));
-    options.AddPolicy(Permissions.UserManagement.Add, policy => 
-        policy.RequireClaim("Permission", Permissions.UserManagement.Add));
-    options.AddPolicy(Permissions.UserManagement.Update, policy => 
-        policy.RequireClaim("Permission", Permissions.UserManagement.Update));
-    options.AddPolicy(Permissions.UserManagement.Delete, policy => 
-        policy.RequireClaim("Permission", Permissions.UserManagement.Delete));
-    
-    // SuperAdmin rolleri için özel politika
-    options.AddPolicy("SuperAdminPolicy", policy =>
-    {
-        policy.RequireAssertion(context => context.User.IsInRole(RoleConstants.SuperAdmin.Name));
-    });
-});
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("SuperAdmin", policy => policy.RequireRole(RoleConstants.SuperAdmin.Name))
+    .AddPolicy("TenantAdmin", policy => policy.RequireRole(RoleConstants.TenantAdmin.Name))
+    .AddPolicy(Permissions.Product.Read, policy =>
+        policy.RequireClaim(Permissions.ClaimType, Permissions.Product.Read))
+    .AddPolicy(Permissions.Product.Add, policy =>
+        policy.RequireClaim(Permissions.ClaimType, Permissions.Product.Add))
+    .AddPolicy(Permissions.Product.Update, policy =>
+        policy.RequireClaim(Permissions.ClaimType, Permissions.Product.Update))
+    .AddPolicy(Permissions.Product.Delete, policy =>
+        policy.RequireClaim(Permissions.ClaimType, Permissions.Product.Delete))
+    .AddPolicy(Permissions.Warehouse.Read, policy =>
+        policy.RequireClaim(Permissions.ClaimType, Permissions.Warehouse.Read))
+    .AddPolicy(Permissions.Warehouse.Add, policy =>
+        policy.RequireClaim(Permissions.ClaimType, Permissions.Warehouse.Add))
+    .AddPolicy(Permissions.Warehouse.Update, policy =>
+        policy.RequireClaim(Permissions.ClaimType, Permissions.Warehouse.Update))
+    .AddPolicy(Permissions.Warehouse.Delete, policy =>
+        policy.RequireClaim(Permissions.ClaimType, Permissions.Warehouse.Delete))
+    .AddPolicy(Permissions.Stock.Read, policy =>
+        policy.RequireClaim(Permissions.ClaimType, Permissions.Stock.Read))
+    .AddPolicy(Permissions.Stock.Add, policy =>
+        policy.RequireClaim(Permissions.ClaimType, Permissions.Stock.Add))
+    .AddPolicy(Permissions.Stock.Update, policy =>
+        policy.RequireClaim(Permissions.ClaimType, Permissions.Stock.Update))
+    .AddPolicy(Permissions.Stock.Delete, policy =>
+        policy.RequireClaim(Permissions.ClaimType, Permissions.Stock.Delete))
+    .AddPolicy(Permissions.UserManagement.Read, policy =>
+        policy.RequireClaim(Permissions.ClaimType, Permissions.UserManagement.Read))
+    .AddPolicy(Permissions.UserManagement.Add, policy =>
+        policy.RequireClaim(Permissions.ClaimType, Permissions.UserManagement.Add))
+    .AddPolicy(Permissions.UserManagement.Update, policy =>
+        policy.RequireClaim(Permissions.ClaimType, Permissions.UserManagement.Update))
+    .AddPolicy(Permissions.UserManagement.Delete, policy =>
+        policy.RequireClaim(Permissions.ClaimType, Permissions.UserManagement.Delete));
 
 builder.Services.AddScoped<UserService>();
 
@@ -101,7 +80,7 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
-    
+
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<Context>();
     await context.Database.EnsureCreatedAsync();

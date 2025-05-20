@@ -48,20 +48,6 @@ public class RoleSeeder : IEntitySeeder
                 Id = RoleConstants.TenantAdmin.Id,
                 Name = RoleConstants.TenantAdmin.Name,
                 NormalizedName = RoleConstants.TenantAdmin.Name.ToUpper(),
-                TenantId = TenantConstants.Id // İlk tenant için
-            },
-            new Role
-            {
-                Id = RoleConstants.Admin.Id,
-                Name = RoleConstants.Admin.Name,
-                NormalizedName = RoleConstants.Admin.Name.ToUpper(),
-                TenantId = TenantConstants.Id
-            },
-            new Role
-            {
-                Id = RoleConstants.User.Id,
-                Name = RoleConstants.User.Name,
-                NormalizedName = RoleConstants.User.Name.ToUpper(),
                 TenantId = TenantConstants.Id
             }
         );

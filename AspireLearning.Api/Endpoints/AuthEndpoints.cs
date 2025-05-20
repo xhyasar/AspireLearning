@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using AspireLearning.Api.Data.Entity;
+using AspireLearning.ServiceDefaults.GlobalConstant;
 using AspireLearning.ServiceDefaults.GlobalModel.Session;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -44,14 +45,12 @@ public static class AuthEndpoints
             foreach (var roleName in userRoles)
             {
                 var role = await roleManager.FindByNameAsync(roleName);
-                if (role != null)
-                {
-                    var roleClaims = await roleManager.GetClaimsAsync(role);
-                    foreach (var claim in roleClaims.Where(c => c.Type == "Permission"))
-                    {
-                        permissions.Add(claim.Value);
-                    }
-                }
+                if (role == null) 
+                    continue;
+                
+                var roleClaims = await roleManager.GetClaimsAsync(role);
+                foreach (var claim in roleClaims.Where(c => c.Type == Permissions.ClaimType))
+                    permissions.Add(claim.Value);
             }
             
             var permissionsArray = permissions.ToArray();
@@ -88,12 +87,14 @@ public static class AuthEndpoints
                 }
             };
             
-            await sessionContainer.CreateItemAsync(session, new PartitionKey(session.UserId));
+            var sessionCosmosTask = sessionContainer.CreateItemAsync(session, new PartitionKey(session.UserId));
+            var sessionCacheTask = cache.SetAsync(token, session, tags: ["Session"]).AsTask();
             
-            await cache.SetAsync(token, session, tags: ["Session"]);
+            await Task.WhenAll(sessionCosmosTask, sessionCacheTask);
             
             return Results.Ok(userTokenModel);
         })
+        .AllowAnonymous()
         .WithTags("Auth")
         .WithDescription("Login to the system")
         .Produces<UserTokenModel>(StatusCodes.Status200OK, "application/json")
@@ -108,9 +109,7 @@ public static class AuthEndpoints
         var audience = jwtSettingsSection["Audience"];
         
         if (string.IsNullOrEmpty(secret))
-        {
             throw new InvalidOperationException("JWT SecretKey is missing in configuration");
-        }
         
         var claims = new List<Claim>
         {
@@ -123,7 +122,7 @@ public static class AuthEndpoints
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
         
         // Add permission claims
-        claims.AddRange(permissions.Select(permission => new Claim("Permission", permission)));
+        claims.AddRange(permissions.Select(permission => new Claim(Permissions.ClaimType, permission)));
         
         var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
