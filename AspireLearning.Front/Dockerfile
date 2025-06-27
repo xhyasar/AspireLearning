@@ -1,17 +1,22 @@
-# 1. Build aşaması
-FROM node:20-alpine AS builder
+FROM node:20 as build
+
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
+
+COPY package.json package.json
+COPY package-lock.json package-lock.json
+
+RUN npm install
+
 COPY . .
+
 RUN npm run build
 
-# 2. Production aşaması (statik dosyaları sunmak için nginx)
 FROM nginx:alpine
-WORKDIR /usr/share/nginx/html
-COPY --from=builder /app/dist .
-COPY --from=builder /app/public ./public
-# Nginx default.conf dosyasını override etmek için (isteğe bağlı)
-COPY --from=builder /app/nginx.conf /etc/nginx/conf.d/default.conf 2>/dev/null || true
+
+COPY --from=build /app/default.conf.template /etc/nginx/templates/default.conf.template
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Expose the default nginx port
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"] 
+
+CMD ["nginx", "-g", "daemon off;"]
