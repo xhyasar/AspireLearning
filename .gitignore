@@ -13,3 +13,4 @@
 *.sln.docstates
 .DS_Store
 .idea/
+.azure

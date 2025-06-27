@@ -32,7 +32,7 @@ public sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvide
                             {
                                 Id = JwtBearerDefaults.AuthenticationScheme, Type = ReferenceType.SecurityScheme
                             }
-                        }] = Array.Empty<string>()
+                        }] = []
                     });
                 });
         }
