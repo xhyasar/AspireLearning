@@ -12,18 +12,18 @@ public static class JwtSettingInjector
 {
     public static IResourceBuilder<ProjectResource> InjectJwtSettings(this IResourceBuilder<ProjectResource> builder, JwtSettings settings)
     {
-        return builder.WithEnvironment("JwtSettings:SecretKey", settings.SecretKey)
-            .WithEnvironment("JwtSettings:Issuer", settings.Issuer)
-            .WithEnvironment("JwtSettings:Audience", settings.Audience);
+        return builder.WithEnvironment("JwtSettings__SecretKey", settings.SecretKey)
+            .WithEnvironment("JwtSettings__Issuer", settings.Issuer)
+            .WithEnvironment("JwtSettings__Audience", settings.Audience);
     }
 
     public static void InjectJwtSettings(IResourceBuilder<ProjectResource>[] resources, JwtSettings settings)
     {
         foreach (var resource in resources)
         {
-            resource.WithEnvironment("JwtSettings:SecretKey", settings.SecretKey)
-                .WithEnvironment("JwtSettings:Issuer", settings.Issuer)
-                .WithEnvironment("JwtSettings:Audience", settings.Audience);
+            resource.WithEnvironment("JwtSettings__SecretKey", settings.SecretKey)
+                .WithEnvironment("JwtSettings__Issuer", settings.Issuer)
+                .WithEnvironment("JwtSettings__Audience", settings.Audience);
         }
     }
 }
